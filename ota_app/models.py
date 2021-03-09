@@ -41,7 +41,11 @@ class Guest(models.Model):
     guest = models.OneToOneField(User, on_delete=models.CASCADE)
 
 class HotelOwner(models.Model):
-    hotel_owner = models.OneToOneField(User, on_delete=models.CASCADE)
+    first_name = models.CharField(max_length=64)
+    last_name = models.CharField(max_length=64)
+    email = models.EmailField(max_length=64)
+    password = models.CharField(max_length=64)
+
 
 class Reservation(models.Model):
     guest_id = models.ForeignKey(Guest, on_delete=models.PROTECT)

@@ -2,8 +2,10 @@ from django.shortcuts import render, reverse, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import View
 import datetime
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from ota_app.models import Hotel_owner, Hotel, Room, Rateplan, Price, Reservation, Guest
+from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
+
+from ota_app.forms import AddUserForm
+from ota_app.models import Hotel_owner, Hotel, Room, Rateplan, Price, Reservation, Guest, HotelOwner
 from django.contrib.auth.models import Group, User
 import calendar
 
@@ -184,15 +186,24 @@ class PriceUpdateView(View):
             )
         return redirect('create_price', hid)
 
-# class CreateHotelOwnerView(CreateView):
-#     model = User
-#     fields = '__all__'
-#     success_url = '/'
+class CreateHotelOwnerView(FormView):
+    template_name = 'ota_app/hotelowner_form.html'
+    form_class = AddUserForm
+    success_url = '/'
 
-    #
-    # User.objects.create_user(username=username, email=email, password=password)
-    # hotel_owner_group = Group.objects.get(name='hotel_owner')
-    # hotel_owner_group.user_set.add(user)
+    def form_valid(self, form):
+        hotel_owner_user = User.objects.create_user(
+            username=form.cleaned_data['username'],
+            first_name=form.cleaned_data['first_name'],
+            last_name=form.cleaned_data['last_name'],
+            password=form.cleaned_data['password'],
+            email=form.cleaned_data['email']
+        )
+        hotel_owner_user.save()
+        # assign user to hotel_owner group
+        hotel_owner_group = Group.objects.get(name='hotel_owner_group')
+        hotel_owner_group.user_set.add(hotel_owner_user)
+        return super().form_valid(form)
 
 
 
