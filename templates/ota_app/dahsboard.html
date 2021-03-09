@@ -1,0 +1,20 @@
+{% include 'ota_app/base.html' %}
+{% block content %}
+
+    <div>
+        data here
+    <hr>
+    </div>
+    <div>
+        <ul>
+        {% for room in hotel.hotel_rooms.all %}
+            <li><a href="{% url 'update_room' room.id %}">{{ room }}</a></li>
+                <ul>
+            {% for rateplan in room.room_rateplans.all %}
+                <li><a href="{% url 'update_rateplan' rateplan.id%}">{{ rateplan }}</a></li>
+            {% endfor %}
+            </ul>
+        {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

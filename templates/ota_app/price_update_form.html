@@ -1,0 +1,18 @@
+{% include 'ota_app/base.html' %}
+
+{% block content %}
+    <form action="" method="post">
+        {% csrf_token %}
+       <p> <select name="rateplan_id">
+            {% for rateplan in rateplans %}
+                <option value="{{ rateplan.id }}">{{ rateplan.name }} ({{ rateplan.room_id.name }})</option>
+            {% endfor %}
+        </select></p>
+        <p>from: <input type="date" name="date_start"></p>
+        <p>from: <input type="date" name="date_end"></p>
+        <p>availability: <input type="number" name="availability"></p>
+        <p>price 1:<input type="number" name="price_1"></p>
+        <p>price 2:<input type="number" name="price_2"></p>
+        <p><input type="submit" value="Save"></p>
+    </form>
+{% endblock %}
