@@ -4,6 +4,7 @@ from django.views import View
 import datetime
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from ota_app.models import Hotel_owner, Hotel, Room, Rateplan, Price, Reservation, Guest
+from django.contrib.auth.models import Group, User
 import calendar
 
 
@@ -154,8 +155,6 @@ class PriceCreateView(View):
                     Price.objects.filter(id=price.id).update(rateplan_id=rateplan_id, availability=availability,
                                                              price_1=price_1,
                                                              price_2=price_2)
-                    # update other rateplans in the same room ( there can be only one availability for each room)
-                    Price.objects.filter(rateplan_id__room_id=room.id, date=post_date).update(availability=availability)
         return redirect('/')
 
 class PriceUpdateView(View):
@@ -184,6 +183,16 @@ class PriceUpdateView(View):
                 price_2 = price_2,
             )
         return redirect('create_price', hid)
+
+# class CreateHotelOwnerView(CreateView):
+#     model = User
+#     fields = '__all__'
+#     success_url = '/'
+
+    #
+    # User.objects.create_user(username=username, email=email, password=password)
+    # hotel_owner_group = Group.objects.get(name='hotel_owner')
+    # hotel_owner_group.user_set.add(user)
 
 
 

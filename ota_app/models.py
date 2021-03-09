@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 # Create your models here.
@@ -37,9 +38,10 @@ class Price(models.Model):
         ordering = ["date"]
 
 class Guest(models.Model):
-    first_name = models.CharField(max_length=64)
-    last_name = models.CharField(max_length=64)
-    email = models.EmailField(max_length=128, unique=True)
+    guest = models.OneToOneField(User, on_delete=models.CASCADE)
+
+class HotelOwner(models.Model):
+    hotel_owner = models.OneToOneField(User, on_delete=models.CASCADE)
 
 class Reservation(models.Model):
     guest_id = models.ForeignKey(Guest, on_delete=models.PROTECT)
