@@ -17,18 +17,22 @@ from django.contrib import admin
 from django.urls import path
 from ota_app.views import HotelCreateView, RoomCreateView, RateplanCreateView, MainView, PriceCreateView, \
     HotelDashboardView, RateplanUpdateView, RoomUpdateView, HotelUpdateView, RoomDeleteView, RateplanDeleteView, \
-    PriceUpdateView, CreateUserView, LoginView, LogoutView
+    PriceUpdateView, CreateUserView, LoginView, LogoutView, RoomDetailsView, HotelDetailsView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # guest part
     path('', MainView.as_view(), name='main'),
+    path('hotel-details/<int:hid>', HotelDetailsView.as_view(), name='hotel-details'),
+    # hotelier part:
     path('dashboard/<int:hid>/', HotelDashboardView.as_view(), name='dashboard'),
     path('register-hotel/', HotelCreateView.as_view(), name='create_hotel'),
     path('update-hotel/<int:pk>/', HotelUpdateView.as_view(), name='update_hotel'),
     path('add-room/<int:hid>/', RoomCreateView.as_view(), name='create_room'),
     path('update-room/<int:pk>/', RoomUpdateView.as_view(), name='update_room'),
     path('delete-room/<int:pk>/', RoomDeleteView.as_view(), name='delete_room'),
-    path('add-rateplan/<int:rid>/', RateplanCreateView.as_view(), name='create_rateplan'),
+    path('details-room/<int:hid>/<rid>/', RoomDetailsView.as_view(), name='details-room'),
+    path('add-rateplan/<int:hid>/<int:rid>/', RateplanCreateView.as_view(), name='create_rateplan'),
     path('update-rateplan/<int:pk>/', RateplanUpdateView.as_view(), name='update_rateplan'),
     path('delete-rateplan/<int:pk>/', RateplanDeleteView.as_view(), name='delete_rateplan'),
     path('add-price/<int:hid>/', PriceCreateView.as_view(), name='create_price'),

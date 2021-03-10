@@ -29,6 +29,13 @@ class MainView(View):
             ctx = {}
         return render(request, 'ota_app/main.html', ctx)
 
+class HotelDetailsView(View):
+    def get(self, request, hid):
+        hotel = Hotel.objects.get(id=hid)
+        ctx = {'hotel': hotel}
+        return render(request, 'ota_app/hotel.html',ctx )
+
+
 class HotelDashboardView(View):
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
@@ -88,11 +95,19 @@ class RoomDeleteView(DeleteView):
         hotel_id = room.hotel_id_id
         return reverse_lazy('dashboard', kwargs={'hid': hotel_id})
 
+
+class RoomDetailsView(View):
+
+    def get(self, request, hid, rid):
+        room = Room.objects.get(id=rid)
+        ctx = {'room': room}
+        return render(request, 'ota_app/room_details.html', ctx)
+
 class RateplanCreateView(View):
-    def get(self, request, rid):
+    def get(self, request,hid, rid):
         return render(request, 'ota_app/rateplan_form.html')
 
-    def post(self, request, rid):
+    def post(self, request,hid, rid):
         name = request.POST.get('name')
         availability = request.POST.get('availability')
         price_1 = request.POST.get('price_1')

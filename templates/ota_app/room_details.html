@@ -1,0 +1,11 @@
+{% include 'ota_app/base.html' %}
+
+{% block title %}Room details{% endblock %}
+
+{% block content %}
+
+<h2>{{ room.name }}</h2>
+    <ul>
+<li><a href="{% url 'update_room' room.id %}">edit room</a></li>
+    </ul>
+{% endblock %}

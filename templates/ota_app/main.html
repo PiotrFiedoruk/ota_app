@@ -14,7 +14,7 @@
 
     <p>search results:</p>
     {% for hotel in hotelsearch %}
-        <a href="">{{ hotel.name }}</a>
+        <a href="{% url 'hotel-details' hotel.id %}">{{ hotel.name }}</a>
     {% endfor %}
 
 {% endblock %}
