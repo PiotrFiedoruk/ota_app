@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path
 from ota_app.views import HotelCreateView, RoomCreateView, RateplanCreateView, MainView, PriceCreateView, \
     HotelDashboardView, RateplanUpdateView, RoomUpdateView, HotelUpdateView, RoomDeleteView, RateplanDeleteView, \
-    PriceUpdateView, CreateHotelOwnerView
+    PriceUpdateView, CreateUserView, LoginView, LogoutView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -33,5 +33,7 @@ urlpatterns = [
     path('delete-rateplan/<int:pk>/', RateplanDeleteView.as_view(), name='delete_rateplan'),
     path('add-price/<int:hid>/', PriceCreateView.as_view(), name='create_price'),
     path('update-price/<int:hid>/', PriceUpdateView.as_view(), name='update_price'),
-    path('register-hotel-owner/', CreateHotelOwnerView.as_view(), name='create_hotel_owner'),
+    path('register-user/', CreateUserView.as_view(), name='register_user'),
+    path('login/', LoginView.as_view(), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
 ]

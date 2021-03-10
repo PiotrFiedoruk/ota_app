@@ -1,10 +1,12 @@
+from django.contrib.auth import authenticate, login, logout
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, reverse, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import View
 import datetime
 from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
 
-from ota_app.forms import AddUserForm
+from ota_app.forms import AddUserForm, LoginForm
 from ota_app.models import Hotel_owner, Hotel, Room, Rateplan, Price, Reservation, Guest, HotelOwner
 from django.contrib.auth.models import Group, User
 import calendar
@@ -186,7 +188,7 @@ class PriceUpdateView(View):
             )
         return redirect('create_price', hid)
 
-class CreateHotelOwnerView(FormView):
+class CreateUserView(FormView):
     template_name = 'ota_app/hotelowner_form.html'
     form_class = AddUserForm
     success_url = '/'
@@ -205,5 +207,28 @@ class CreateHotelOwnerView(FormView):
         hotel_owner_group.user_set.add(hotel_owner_user)
         return super().form_valid(form)
 
+class LoginView(View):
+    def get(self, request):
+        form = LoginForm()
+        return render(request, "ota_app/login.html", {"form":form})
 
+    def post(self, request):
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            username = request.POST.get('login')
+            password = request.POST.get('password')
+            user = authenticate(username=username, password=password)
+            if user:
+                login(request, user)
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
+            else:
+                err = 'wrong username or password. try again'
+                return render(request, "ota_app/login.html", {"form":form, 'err': err})
+        else:
+            err = 'something went wrong'
+            return render(request, "ota_app/login.html", {"form":form, 'err': err})
 
+class LogoutView(View):
+    def get(self, request):
+        logout(request)
+        return redirect(request.META['HTTP_REFERER'])

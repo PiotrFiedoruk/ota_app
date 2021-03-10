@@ -5,6 +5,11 @@
     <title>{% block title %} {% endblock title %}</title>
 </head>
 <body>
+{% if user.is_authenticated %}
+Hello {{ user.get_username }} <a href="{% url 'logout' %}">Wyloguj</a>
+    {% else %}
+You can login here<a href="{% url 'login' %}">Zaloguj</a>
+{% endif %}
 <ul>
 <li><a href="{% url 'main' %}">Main</a></li>
 <li><a href="{% url 'dashboard' 2%}">Dashboard</a></li>
@@ -12,6 +17,8 @@
 <li><a href="{% url 'create_room' 1 %}">Add room</a></li>
 <li><a href="{% url 'create_rateplan' 1%}">Add rateplan</a></li>
 <li><a href="{% url 'create_price' 2 %}">Add price</a></li>
+<li><a href="{% url 'register_user' %}">Create user</a></li>
+<li><a href="{% url 'login' %}">Login</a></li>
 </ul>
 {% block content %}
 
