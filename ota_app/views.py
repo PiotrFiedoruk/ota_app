@@ -121,21 +121,27 @@ class PriceCreateView(View):
         form = ""
         for room in hotel.hotel_rooms.all():
             form = form + f"<p>{room.name}</p>"
+            loop = 1
             for rateplan in room.room_rateplans.all():
                 form = form + f"<p>{rateplan.name}</p><table class=''><tr>"
                 form = form + "<td><input type='text' disabled value='availability'>" \
+                            "<p></p>"\
                               "<input type='text' disabled value='price 1'>" \
                               "<input type='text' disabled value='price 2'></td>"
                 for price in rateplan.rateplan_prices.filter(date__gte=start_date, date__lte=end_date):
                     form = form + "<td>"
-                    form = form + f"<input type='hidden' value='{price.date}' name='dt-{price.id}'><br>"
-                    form = form + f"<input type='number' value='{price.availability}' name='av-{price.id}'><br>"
+                    if loop == 1:
+                        form = form + f"<input type='hidden' value='{price.date}' name='dt-{price.id}'><br>"
+                        form = form + f"<input type='number' value='{price.availability}' name='av-{price.id}'><br>"
+                        form = form + f"<p></p>"
                     form = form + f"<input type='number' value='{price.price_1}' name='pr1-{price.id}'><br>"
                     form = form + f"<input type='number' value='{price.price_2}' name='pr2-{price.id}'><br>"
                     form = form + "</td>"
                 form = form + "</tr></table>"
+                loop += 1
         ctx = {'hotel': hotel, 'start_date': start_date, 'end_date': end_date, 'prev_date': prev_date, 'form': form}
         return render(request, 'ota_app/add_price.html', ctx)
+
 
     def post(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
@@ -147,19 +153,29 @@ class PriceCreateView(View):
             start_date = datetime.datetime.today().date()
         end_date = start_date + datetime.timedelta(days=14)  # set number of calendar days here
         # save dates from form:
+
         for room in hotel.hotel_rooms.all():
+            loop = 1
             for rateplan in room.room_rateplans.all():
                 for price in rateplan.rateplan_prices.filter(date__gte=start_date, date__lte=end_date):
                     rateplan_id = rateplan.id
                     date = price.date.strftime('%Y-%m-%d')
                     post_date = request.POST.get(f"dt-{price.id}")
-                    availability = request.POST.get(f"av-{price.id}")
+
                     price_1 = request.POST.get(f"pr1-{price.id}")
                     price_2 = request.POST.get(f"pr2-{price.id}")
-                    Price.objects.filter(id=price.id).update(rateplan_id=rateplan_id, availability=availability,
-                                                             price_1=price_1,
-                                                             price_2=price_2)
-        return redirect('/')
+                    if loop == 1:
+                        # update availability for room prices on the same date:
+                        availability = request.POST.get(f"av-{price.id}")
+                        Price.objects.filter(rateplan_id__room_id=room.id).filter(date=date).update(
+                            availability=availability)
+                    else:
+                        # update other fields:
+                        Price.objects.filter(id=price.id).update(rateplan_id=rateplan_id,
+                                                                 price_1=price_1,
+                                                                 price_2=price_2)
+                loop += 1
+        return redirect('create_price', hid)
 
 class PriceUpdateView(View):
     def get(self, request, hid):
@@ -170,6 +186,7 @@ class PriceUpdateView(View):
 
     def post(self, request, hid):
         rateplan_id = request.POST.get('rateplan_id')
+        room = Room.objects.get(room_rateplans__id=rateplan_id)
         start_date = request.POST.get('date_start')
         end_date = request.POST.get('date_end')
         availability = request.POST.get('availability')
@@ -181,6 +198,8 @@ class PriceUpdateView(View):
         # create a list of dates:
         date_list = [start_date + datetime.timedelta(days=x) for x in range((end_date - start_date).days + 1)]
         for date in date_list:
+            Price.objects.filter(rateplan_id__room_id=room.id).filter(date=date).update(
+                availability=availability)
             Price.objects.filter(rateplan_id=rateplan_id).filter(date=date).update(
                 availability = availability,
                 price_1 = price_1,
