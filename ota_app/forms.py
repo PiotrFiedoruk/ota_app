@@ -1,8 +1,16 @@
 import django.forms as forms
-from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email, URLValidator
+from ota_app.models import Hotel
 
+
+def hotel_name_unique(name):
+    if Hotel.objects.filter(name=name):
+        raise ValidationError('hotel with this email already exists')
+
+class AddHotelForm(forms.Form):
+    name = forms.CharField(max_length=64,validators=[hotel_name_unique])
+    city = forms.CharField(max_length=64)
 
 def email_unique(email):
     if User.objects.filter(email=email):
@@ -23,3 +31,8 @@ class LoginForm(forms.Form):
 class ResetPasswordForm(forms.Form):
     password = forms.CharField(max_length=64, widget=forms.PasswordInput, label='enter password')
     repeat_password = forms.CharField(max_length=64, widget=forms.PasswordInput, label='repeat password')
+
+
+
+class AddRoomForm(forms.Form):
+    name = forms.CharField(max_length=128)

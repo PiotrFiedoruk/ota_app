@@ -1,6 +1,11 @@
 {% include 'ota_app/base.html' %}
 {% block content %}
-
+    <div>
+        links:
+        <ul>
+            <li><a href="{% url 'create_room' hotel.id %}">Add room</a></li>
+        </ul>
+    </div>
     <div>
         data here
     <hr>

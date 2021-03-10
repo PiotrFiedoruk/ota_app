@@ -6,7 +6,7 @@ from django.views import View
 import datetime
 from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
 
-from ota_app.forms import AddUserForm, LoginForm
+from ota_app.forms import AddUserForm, LoginForm, AddHotelForm, AddRoomForm
 from ota_app.models import Hotel_owner, Hotel, Room, Rateplan, Price, Reservation, Guest, HotelOwner
 from django.contrib.auth.models import Group, User
 import calendar
@@ -35,20 +35,40 @@ class HotelDashboardView(View):
         ctx = {'hotel': hotel}
         return render(request, 'ota_app/dahsboard.html', ctx)
 
-class HotelCreateView(CreateView):
-    model = Hotel
-    fields = '__all__'
-    success_url = "/"
+class HotelCreateView(FormView):
+    template_name = 'ota_app/hotel_form.html'
+    form_class = AddHotelForm
+    success_url = '/'
+
+    def form_valid(self, form):
+        hotel = Hotel.objects.create(
+            name=form.cleaned_data['name'],
+            city=form.cleaned_data['city'],
+        )
+        hotel.save()
+        # assign hotel_owner group permission to logged in user
+        hotel_owner_user = self.request.user
+        hotel_owner_group = Group.objects.get(name='hotel_owner_group')
+        hotel_owner_group.user_set.add(hotel_owner_user)
+        return redirect('dashboard', hotel.id)
 
 class HotelUpdateView(UpdateView):
     model = Hotel
     fields = '__all__'
     template_name_suffix = '_update_form'
 
-class RoomCreateView(CreateView):
-    model = Room
-    fields = '__all__'
-    success_url = "/"
+class RoomCreateView(View):
+    def get(self, request, hid):
+        form = AddRoomForm
+        ctx = {'form': form}
+        return render(request, 'ota_app/room_form.html', ctx)
+
+    def post(self, request, hid):
+        hotel = Hotel.objects.get(id=hid)
+        name = request.POST.get('name')
+        room = Room.objects.create(hotel_id=hotel, name=name)
+        room.save()
+        return redirect('dashboard', hotel.id)
 
 class RoomUpdateView(UpdateView):
     model = Room
@@ -78,6 +98,7 @@ class RateplanCreateView(View):
         price_1 = request.POST.get('price_1')
         price_2 = request.POST.get('price_2')
         room_obj = Room.objects.get(id=rid)
+        hotel_id = room_obj.hotel_id.id
         new_rateplan = Rateplan(name=name, room_id=room_obj)
         new_rateplan.save()
         # create list of dates
@@ -87,7 +108,7 @@ class RateplanCreateView(View):
         for date in datelist:
             Price.objects.create(rateplan_id=new_rateplan, date=date, availability=availability, price_1=price_1,
                                  price_2=price_2)
-        return redirect('main')
+        return redirect('dashboard', hotel_id)
 
 class RateplanUpdateView(UpdateView):
     model = Rateplan
@@ -169,6 +190,9 @@ class PriceCreateView(View):
                         availability = request.POST.get(f"av-{price.id}")
                         Price.objects.filter(rateplan_id__room_id=room.id).filter(date=date).update(
                             availability=availability)
+                        Price.objects.filter(id=price.id).update(rateplan_id=rateplan_id,
+                                                                 price_1=price_1,
+                                                                 price_2=price_2)
                     else:
                         # update other fields:
                         Price.objects.filter(id=price.id).update(rateplan_id=rateplan_id,
