@@ -5,7 +5,6 @@ add rateplan
     <form method = 'POST'>
         {% csrf_token %}
         <p>Rateplan name: <input type="text" name="name"></p>
-        <p>Default availability: <input type="number" name="availability"> </p>
         <p>Default price 1 guest: <input type="number" name="price_1"></p>
         <p>Default price 2 guests: <input type="number" name="price_2"></p>
         <p><input type="submit" value="Add rateplan"></p>

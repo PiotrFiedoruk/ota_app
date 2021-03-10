@@ -6,5 +6,7 @@
 
     {{ hotel.name }}
     {{ hotel.city }}
-
+    {% for room in available_rooms %}
+        {{ room.name }}
+    {% endfor %}
 {% endblock %}

@@ -18,13 +18,14 @@ class MainView(View):
             city = request.GET.get('city')
             arrival = request.GET.get('arrival')
             departure = request.GET.get('departure')
+            guests = request.GET.get('guests')
             departure = (datetime.datetime.strptime(departure, '%Y-%m-%d') - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
             hotelsearch = Hotel.objects.filter(
                 city=city,
                 hotel_rooms__room_rateplans__rateplan_prices__date__range=[arrival, departure],
                 # room__rateplan__prices__price_1__isnull=False,
                 hotel_rooms__room_rateplans__rateplan_prices__availability__gt=0, ).distinct()
-            ctx = {'hotelsearch': hotelsearch}
+            ctx = {'hotelsearch': hotelsearch, 'city': city, 'arrival': arrival, 'departure': departure, 'guests': guests }
         else:
             ctx = {}
         return render(request, 'ota_app/main.html', ctx)
@@ -32,7 +33,17 @@ class MainView(View):
 class HotelDetailsView(View):
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
-        ctx = {'hotel': hotel}
+        #display available rooms if dates are known
+        if 'arrival' in request.GET:
+            arrival = request.GET.get('arrival')
+            departure = request.GET.get('departure')
+            guests = request.GET.get('guests')
+            available_rooms = hotel.hotel_rooms.filter(
+                room_rateplans__rateplan_prices__date__range=[arrival, departure],
+                room_rateplans__rateplan_prices__availability__gt=0, ).distinct()
+        else:
+            available_rooms = []
+        ctx = {'hotel': hotel, 'available_rooms': available_rooms}
         return render(request, 'ota_app/hotel.html',ctx )
 
 
@@ -109,7 +120,6 @@ class RateplanCreateView(View):
 
     def post(self, request,hid, rid):
         name = request.POST.get('name')
-        availability = request.POST.get('availability')
         price_1 = request.POST.get('price_1')
         price_2 = request.POST.get('price_2')
         room_obj = Room.objects.get(id=rid)
@@ -118,10 +128,10 @@ class RateplanCreateView(View):
         new_rateplan.save()
         # create list of dates
         date_today = datetime.datetime.today()
-        datelist = [str(date_today + datetime.timedelta(days=x))[:10] for x in range(10)]
+        datelist = [str(date_today + datetime.timedelta(days=x))[:10] for x in range(10)] # number of initial dates here
         # create default prices for new rateplan for the next 365 days:
         for date in datelist:
-            Price.objects.create(rateplan_id=new_rateplan, date=date, availability=availability, price_1=price_1,
+            Price.objects.create(rateplan_id=new_rateplan, date=date, price_1=price_1,
                                  price_2=price_2)
         return redirect('dashboard', hotel_id)
 
@@ -237,10 +247,11 @@ class PriceUpdateView(View):
         # create a list of dates:
         date_list = [start_date + datetime.timedelta(days=x) for x in range((end_date - start_date).days + 1)]
         for date in date_list:
+            # update availability for all rateplans:
             Price.objects.filter(rateplan_id__room_id=room.id).filter(date=date).update(
                 availability=availability)
+            # update price for rateplan
             Price.objects.filter(rateplan_id=rateplan_id).filter(date=date).update(
-                availability = availability,
                 price_1 = price_1,
                 price_2 = price_2,
             )
