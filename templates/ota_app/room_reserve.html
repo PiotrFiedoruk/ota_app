@@ -1,0 +1,21 @@
+{% include 'ota_app/base.html' %}
+
+{% block title %}Room details{% endblock %}
+
+{% block content %}
+
+  <h2>  {{ room.name }}</h2>
+    <p>zdjecia</p>
+    <p>opis</p>
+
+    {% for rateplan in available_rateplans %}
+            {{ rateplan }}
+        {{ rateplan.total_price }}
+    {% endfor %}
+
+{#    {% for p in price %}#}
+{##}
+{#    {{ p.total_price }}#}
+{##}
+{#    {% endfor %}#}
+{% endblock %}

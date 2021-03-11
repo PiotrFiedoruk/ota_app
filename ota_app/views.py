@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django.views import View
 import datetime
 from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
-
+from django.db.models import Avg, Sum
 from ota_app.forms import AddUserForm, LoginForm, AddHotelForm, AddRoomForm
 from ota_app.models import Hotel_owner, Hotel, Room, Rateplan, Price, Reservation, Guest, HotelOwner
 from django.contrib.auth.models import Group, User
@@ -19,7 +19,7 @@ class MainView(View):
             arrival = request.GET.get('arrival')
             departure = request.GET.get('departure')
             guests = request.GET.get('guests')
-            departure = (datetime.datetime.strptime(departure, '%Y-%m-%d') - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+            # departure = (datetime.datetime.strptime(departure, '%Y-%m-%d') - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
             hotelsearch = Hotel.objects.filter(
                 city=city,
                 hotel_rooms__room_rateplans__rateplan_prices__date__range=[arrival, departure],
@@ -41,10 +41,37 @@ class HotelDetailsView(View):
             available_rooms = hotel.hotel_rooms.filter(
                 room_rateplans__rateplan_prices__date__range=[arrival, departure],
                 room_rateplans__rateplan_prices__availability__gt=0, ).distinct()
+            # count the average room price for each room:
+            available_rooms_price = hotel.hotel_rooms.filter(
+            room_rateplans__rateplan_prices__date__range=[arrival, departure],
+            room_rateplans__rateplan_prices__availability__gt=0, ).distinct()\
+                .annotate(avg_price=Avg('room_rateplans__rateplan_prices__price_1'))
         else:
             available_rooms = []
-        ctx = {'hotel': hotel, 'available_rooms': available_rooms}
+            available_rooms_price = []
+        ctx = {'hotel': hotel, 'available_rooms': available_rooms, 'available_rooms_price': available_rooms_price,
+               'arrival': arrival, 'departure': departure, 'guests': guests}
         return render(request, 'ota_app/hotel.html',ctx )
+
+class RoomReserveView(View):
+    def get(self, request, hid, rid):
+        room = Room.objects.get(id=rid)
+        if 'arrival' in request.GET:
+            arrival = request.GET.get('arrival')
+            departure = request.GET.get('departure')
+            guests = request.GET.get('guests')
+
+            available_rateplans = Rateplan.objects.filter(room_id=rid, rateplan_prices__date__gte=arrival,
+                                                      rateplan_prices__date__lt=departure,
+                                                      rateplan_prices__availability__gt=0,
+                                                      ).annotate(total_price=Sum('rateplan_prices__price_1'))
+
+            # available_rateplans = Rateplan.objects.filter(room_id=rid, rateplan_prices__availability__gt=0)
+
+            # price = Price.objects.filter(rateplan_id=rateplan.id, date__gte=arrival, date__lte=departure).annotate(total_price=Sum('price_1'))
+            # for p in price:
+            ctx = {'room': room, 'available_rateplans': available_rateplans}
+        return render(request, 'ota_app/room_reserve.html', ctx)
 
 
 class HotelDashboardView(View):

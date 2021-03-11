@@ -6,7 +6,16 @@
 
     {{ hotel.name }}
     {{ hotel.city }}
-    {% for room in available_rooms %}
-        {{ room.name }}
-    {% endfor %}
-{% endblock %}
+    <ul>
+    Available rooms:
+        {% for room in available_rooms_price %}
+            <li> {{ room }} - from {{room.avg_price|floatformat:"0"}} PLN per night -
+            <a href="{% url 'room-reserve' hotel.id room.id %}?city={{ city }}&arrival={{ arrival }}&departure={{ departure }}&guests={{ guests }}">Book</a> </li>
+        {% endfor %}
+    </ul>
+
+
+
+
+
+ {% endblock %}

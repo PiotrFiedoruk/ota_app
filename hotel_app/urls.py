@@ -17,13 +17,16 @@ from django.contrib import admin
 from django.urls import path
 from ota_app.views import HotelCreateView, RoomCreateView, RateplanCreateView, MainView, PriceCreateView, \
     HotelDashboardView, RateplanUpdateView, RoomUpdateView, HotelUpdateView, RoomDeleteView, RateplanDeleteView, \
-    PriceUpdateView, CreateUserView, LoginView, LogoutView, RoomDetailsView, HotelDetailsView
+    PriceUpdateView, CreateUserView, LoginView, LogoutView, RoomDetailsView, HotelDetailsView, RoomReserveView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
     # guest part
     path('', MainView.as_view(), name='main'),
     path('hotel-details/<int:hid>', HotelDetailsView.as_view(), name='hotel-details'),
+    path('room-reserve/<int:hid>/<int:rid>/', RoomReserveView.as_view(), name='room-reserve'),
+
     # hotelier part:
     path('dashboard/<int:hid>/', HotelDashboardView.as_view(), name='dashboard'),
     path('register-hotel/', HotelCreateView.as_view(), name='create_hotel'),
