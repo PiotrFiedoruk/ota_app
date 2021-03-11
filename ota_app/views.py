@@ -6,11 +6,11 @@ from django.views import View
 import datetime
 from django.views.generic.edit import UpdateView, DeleteView, FormView
 from django.db.models import Avg, Sum
-from ota_app.forms import AddUserForm, LoginForm, AddHotelForm, AddRoomForm
+from ota_app.forms import AddUserForm, LoginForm, AddHotelForm, AddRoomForm, AddRateplanForm
 from ota_app.models import Hotel, Room, Rateplan, Price, Reservation
 from django.contrib.auth.models import Group, User
 
-
+# no post
 class MainView(View):
     def get(self, request):
         if 'city' in request.GET:
@@ -28,7 +28,7 @@ class MainView(View):
         else:
             ctx = {}
         return render(request, 'ota_app/main.html', ctx)
-
+# no post
 class HotelDetailsView(View):
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
@@ -51,7 +51,7 @@ class HotelDetailsView(View):
         ctx = {'hotel': hotel, 'available_rooms': available_rooms, 'available_rooms_price': available_rooms_price,
                'arrival': arrival, 'departure': departure, 'guests': guests}
         return render(request, 'ota_app/hotel.html',ctx )
-
+# no post
 class RoomReserveView(View):
     def get(self, request, hid, rid):
         room = Room.objects.get(id=rid)
@@ -75,7 +75,7 @@ class ConfirmReservationView(View):
         departure = request.POST.get('departure')
         guests = request.POST.get('guests')
         total_price = request.POST.get('total_price')
-        # get neccesarily objects:
+        # get necessarily objects to create new reservation:
         hotel_obj = Hotel.objects.get(hotel_rooms__room_rateplans__in=[rpid])
         guest_id = request.user.id
         guest_obj = User.objects.get(id=guest_id)
@@ -98,7 +98,7 @@ class ConfirmReservationView(View):
         ctx = {'hotel': hotel_obj, 'room': room, 'rateplan': rateplan, 'guests': guests, 'arrival': arrival,
                'departure': departure, 'total_price':total_price}
         return render(request, 'ota_app/confirm_reservation.html', ctx)
-
+#no post
 class HotelDashboardView(View):
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
@@ -114,7 +114,7 @@ class HotelDashboardView(View):
         total_average = total_average / len(average_price)
         ctx = {'hotel': hotel, 'reservations': reservations, 'total_average': total_average}
         return render(request, 'ota_app/dahsboard.html', ctx)
-
+#f
 class HotelCreateView(FormView):
     template_name = 'ota_app/hotel_form.html'
     form_class = AddHotelForm
@@ -136,7 +136,7 @@ class HotelUpdateView(UpdateView):
     model = Hotel
     fields = '__all__'
     template_name_suffix = '_update_form'
-
+#f
 class RoomCreateView(View):
     def get(self, request, hid):
         form = AddRoomForm
@@ -167,7 +167,7 @@ class RoomDeleteView(DeleteView):
         room = self.object
         hotel_id = room.hotel_id_id
         return reverse_lazy('dashboard', kwargs={'hid': hotel_id})
-
+# no post
 class RoomDetailsView(View):
 
     def get(self, request, hid, rid):
@@ -176,25 +176,28 @@ class RoomDetailsView(View):
         return render(request, 'ota_app/room_details.html', ctx)
 
 class RateplanCreateView(View):
-    def get(self, request,hid, rid):
-        return render(request, 'ota_app/rateplan_form.html')
+    def get(self, request, hid, rid):
+        form = AddRateplanForm()
+        return render(request, 'ota_app/rateplan_form.html', {'form': form})
 
-    def post(self, request,hid, rid):
-        name = request.POST.get('name')
-        price_1 = request.POST.get('price_1')
-        price_2 = request.POST.get('price_2')
-        room_obj = Room.objects.get(id=rid)
-        hotel_id = room_obj.hotel_id.id
-        new_rateplan = Rateplan(name=name, room_id=room_obj)
-        new_rateplan.save()
-        # create list of dates
-        date_today = datetime.datetime.today()
-        datelist = [str(date_today + datetime.timedelta(days=x))[:10] for x in range(10)] # number of initial dates here
-        # create default prices for new rateplan for the next 365 days:
-        for date in datelist:
-            Price.objects.create(rateplan_id=new_rateplan, date=date, price_1=price_1,
-                                 price_2=price_2)
-        return redirect('dashboard', hotel_id)
+    def post(self, request, hid, rid):
+        form = AddRateplanForm(request.POST)
+        if form.is_valid():
+            name = request.POST.get('name')
+            price_1 = request.POST.get('price_1')
+            price_2 = request.POST.get('price_2')
+            room_obj = Room.objects.get(id=rid)
+            hotel_id = room_obj.hotel_id.id
+            new_rateplan = Rateplan(name=name, room_id=room_obj)
+            new_rateplan.save()
+            # create list of dates
+            date_today = datetime.date.today()
+            datelist = [date_today + datetime.timedelta(days=x) for x in range(365)] # number of initial dates here
+            # create default prices for new rateplan for the next 365 days:
+            for date in datelist:
+                Price.objects.create(rateplan_id=new_rateplan, date=date, price_1=price_1,
+                                     price_2=price_2, availability=0)
+            return redirect('dashboard', hotel_id)
 
 class RateplanUpdateView(UpdateView):
     model = Rateplan
@@ -212,7 +215,7 @@ class RateplanDeleteView(DeleteView):
         hotel_id = rateplan.room_id.hotel_id_id
         return reverse_lazy('dashboard', kwargs={'hid': hotel_id})
 
-class PriceCreateView(View):
+class PriceCreateView(View): #price calendar
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
         # define start and end date for price list. if start date not provided in url, set it to today's date
@@ -230,17 +233,18 @@ class PriceCreateView(View):
             form = form + f"<p>{room.name}</p>"
             loop = 1
             for rateplan in room.room_rateplans.all():
-                form = form + f"<p>{rateplan.name}</p><table class=''><tr>"
-                form = form + "<td><input type='text' disabled value='availability'>" \
-                            "<p></p>"\
+                form = form + f"<table class=''><tr>"
+                form = form + f"<td><input type='text' disabled value='{rateplan.name}'>" \
                               "<input type='text' disabled value='price 1'>" \
                               "<input type='text' disabled value='price 2'></td>"
                 for price in rateplan.rateplan_prices.filter(date__gte=start_date, date__lte=end_date):
                     form = form + "<td>"
                     if loop == 1:
+                        form = form + f"{price.date.strftime('%a %d %b')}<br>"
                         form = form + f"<input type='hidden' value='{price.date}' name='dt-{price.id}'><br>"
                         form = form + f"<input type='number' value='{price.availability}' name='av-{price.id}'><br>"
-                        form = form + f"<p></p>"
+                        # form = form + f"<p></p>"
+                    form = form + f"<p></p>"
                     form = form + f"<input type='number' value='{price.price_1}' name='pr1-{price.id}'><br>"
                     form = form + f"<input type='number' value='{price.price_2}' name='pr2-{price.id}'><br>"
                     form = form + "</td>"
@@ -287,7 +291,7 @@ class PriceCreateView(View):
                 loop += 1
         return redirect('create_price', hid)
 
-class PriceUpdateView(View):
+class PriceUpdateView(View): #batch update
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
         rateplans = Rateplan.objects.filter(room_id__hotel_id_id=hid)
@@ -309,15 +313,17 @@ class PriceUpdateView(View):
         date_list = [start_date + datetime.timedelta(days=x) for x in range((end_date - start_date).days + 1)]
         for date in date_list:
             # update availability for all rateplans:
-            Price.objects.filter(rateplan_id__room_id=room.id).filter(date=date).update(
-                availability=availability)
-            # update price for rateplan
-            Price.objects.filter(rateplan_id=rateplan_id).filter(date=date).update(
-                price_1 = price_1,
-                price_2 = price_2,
-            )
+            if availability != "":
+                Price.objects.filter(rateplan_id__room_id=room.id).filter(date=date).update(
+                        availability=availability)
+            # # update prices for chosen rateplan
+            price = Price.objects.filter(rateplan_id=rateplan_id).filter(date=date)
+            if price_1 != "":
+                price.update(price_1=price_1)
+            if price_2 != "":
+                price.update(price_2=price_2)
         return redirect('create_price', hid)
-
+#f
 class CreateUserView(FormView):
     template_name = 'ota_app/hotelowner_form.html'
     form_class = AddUserForm

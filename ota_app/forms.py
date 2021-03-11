@@ -1,4 +1,5 @@
 import django.forms as forms
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email, URLValidator
 from ota_app.models import Hotel
@@ -32,7 +33,10 @@ class ResetPasswordForm(forms.Form):
     password = forms.CharField(max_length=64, widget=forms.PasswordInput, label='enter password')
     repeat_password = forms.CharField(max_length=64, widget=forms.PasswordInput, label='repeat password')
 
-
-
 class AddRoomForm(forms.Form):
     name = forms.CharField(max_length=128)
+
+class AddRateplanForm(forms.Form):
+    name = forms.CharField(max_length=32)
+    price_1 = forms.DecimalField(max_digits=7, decimal_places=2)
+    price_2 = forms.DecimalField(max_digits=7, decimal_places=2)

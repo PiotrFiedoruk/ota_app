@@ -4,9 +4,7 @@ add rateplan
 <div>
     <form method = 'POST'>
         {% csrf_token %}
-        <p>Rateplan name: <input type="text" name="name"></p>
-        <p>Default price 1 guest: <input type="number" name="price_1"></p>
-        <p>Default price 2 guests: <input type="number" name="price_2"></p>
+        {{ form.as_table }}
         <p><input type="submit" value="Add rateplan"></p>
     </form>
 </div>
