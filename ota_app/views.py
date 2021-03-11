@@ -7,7 +7,7 @@ import datetime
 from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
 from django.db.models import Avg, Sum
 from ota_app.forms import AddUserForm, LoginForm, AddHotelForm, AddRoomForm
-from ota_app.models import Hotel_owner, Hotel, Room, Rateplan, Price, Reservation, Guest, HotelOwner
+from ota_app.models import Hotel_owner, Hotel, Room, Rateplan, Price, Reservation
 from django.contrib.auth.models import Group, User
 import calendar
 
@@ -77,17 +77,21 @@ class ConfirmReservationView(View):
         user_first_name = request.user.first_name
         user_last_name = request.user.last_name
         total_price = request.POST.get('total_price')
-        hotel = Hotel.objects.get(hotel_rooms__room_rateplans__in=[rpid])
+        hotel_obj = Hotel.objects.get(hotel_rooms__room_rateplans__in=[rpid])
+        guest_id = request.user.id
+        guest_obj = User.objects.get(id=guest_id)
+        rateplan_obj=Rateplan.objects.get(id=rpid)
         room = Room.objects.get(room_rateplans__in=[rpid])
         rateplan = Rateplan.objects.get(id=rpid)
 
-
-
-        ctx = {'hotel': hotel, 'room': room, 'rateplan': rateplan, 'guests': guests, 'arrival': arrival,
+        new_reservation = Reservation.objects.create(hotel=hotel_obj, guest=guest_obj,
+                                                     price=int(float(total_price)), arrival=arrival, departure=departure,
+                                                     num_of_guests=int(guests))
+        new_reservation.save()
+        new_reservation.rateplan.add(rateplan_obj)
+        ctx = {'hotel': hotel_obj, 'room': room, 'rateplan': rateplan, 'guests': guests, 'arrival': arrival,
                'departure': departure, 'total_price':total_price}
         return render(request, 'ota_app/confirm_reservation.html', ctx)
-
-
 
 class HotelDashboardView(View):
     def get(self, request, hid):
@@ -147,7 +151,6 @@ class RoomDeleteView(DeleteView):
         room = self.object
         hotel_id = room.hotel_id_id
         return reverse_lazy('dashboard', kwargs={'hid': hotel_id})
-
 
 class RoomDetailsView(View):
 

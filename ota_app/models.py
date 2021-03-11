@@ -37,19 +37,9 @@ class Price(models.Model):
     class Meta:
         ordering = ["date"]
 
-class Guest(models.Model):
-    guest = models.OneToOneField(User, on_delete=models.CASCADE)
-
-class HotelOwner(models.Model):
-    first_name = models.CharField(max_length=64)
-    last_name = models.CharField(max_length=64)
-    email = models.EmailField(max_length=64)
-    password = models.CharField(max_length=64)
-
-
 class Reservation(models.Model):
     hotel =models.ForeignKey(Hotel, on_delete=models.PROTECT)
-    guest = models.ForeignKey(Guest, on_delete=models.PROTECT)
+    guest = models.ForeignKey(User, on_delete=models.PROTECT)
     rateplan = models.ManyToManyField(Rateplan)
     price = models.DecimalField(max_digits=7, decimal_places=2)
     arrival = models.DateField()
