@@ -11,11 +11,14 @@
     {% for rateplan in available_rateplans %}
             {{ rateplan }}
         {{ rateplan.total_price }}
+        <form method="post" action="{% url 'confirm-reservation' %}">
+        {% csrf_token %}
+            <input type="text" value="{{ rateplan.id }}" name="rpid">
+            <input type="text" value="{{ rateplan.total_price }}" name="total_price">
+            <input type="text" value="{{ arrival }}" name="arrival">
+            <input type="text" value="{{ departure }}" name="departure">
+            <input type="text" value="{{ guests }}" name="guests">
+            <input type="submit" value="Book this rate">
+        </form>
     {% endfor %}
-
-{#    {% for p in price %}#}
-{##}
-{#    {{ p.total_price }}#}
-{##}
-{#    {% endfor %}#}
 {% endblock %}

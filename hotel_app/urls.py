@@ -17,7 +17,8 @@ from django.contrib import admin
 from django.urls import path
 from ota_app.views import HotelCreateView, RoomCreateView, RateplanCreateView, MainView, PriceCreateView, \
     HotelDashboardView, RateplanUpdateView, RoomUpdateView, HotelUpdateView, RoomDeleteView, RateplanDeleteView, \
-    PriceUpdateView, CreateUserView, LoginView, LogoutView, RoomDetailsView, HotelDetailsView, RoomReserveView
+    PriceUpdateView, CreateUserView, LoginView, LogoutView, RoomDetailsView, HotelDetailsView, RoomReserveView, \
+    ConfirmReservationView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,6 +27,7 @@ urlpatterns = [
     path('', MainView.as_view(), name='main'),
     path('hotel-details/<int:hid>', HotelDetailsView.as_view(), name='hotel-details'),
     path('room-reserve/<int:hid>/<int:rid>/', RoomReserveView.as_view(), name='room-reserve'),
+    path('confirm-reservation/', ConfirmReservationView.as_view(), name='confirm-reservation'),
 
     # hotelier part:
     path('dashboard/<int:hid>/', HotelDashboardView.as_view(), name='dashboard'),

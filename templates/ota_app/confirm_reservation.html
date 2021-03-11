@@ -1,0 +1,31 @@
+{% include 'ota_app/base.html' %}
+
+{% block title %}Confirm your reservation{% endblock %}
+
+{% block content %}
+
+        <p>Your hotel: {{ hotel.name }}</p>
+        <p>Your room: {{ room.name }}</p>
+        <p>Number of guests: {{ guests }}</p>
+        <p>Arrival: {{ arrival }}</p>
+        <p>Departure: {{ departure }}</p>
+        <p>Total price: {{ total_price }} PLN</p>
+{##}
+{#  <h2>  {{ room.name }}</h2>#}
+{#    <p>zdjecia</p>#}
+{#    <p>opis</p>#}
+{##}
+{#    {% for rateplan in available_rateplans %}#}
+{#            {{ rateplan }}#}
+{#        {{ rateplan.total_price }}#}
+{#        <form method="post" action="{% url 'confirm-reservation' %}">#}
+{#            <input type="text" value="{{ rateplan.id }}" name="rpid">#}
+{#            <input type="text" value="{{ rateplan.total_price }}" name="price">#}
+{#            <input type="text" value="{{ arrival }}" name="arrival">#}
+{#            <input type="text" value="{{ departure }}" name="departure">#}
+{#            <input type="text" value="{{ guests }}" name="guests">#}
+{#            <input type="submit" value="Book this rate">#}
+{#        </form>#}
+{#    {% endfor %}#}
+
+{% endblock %}

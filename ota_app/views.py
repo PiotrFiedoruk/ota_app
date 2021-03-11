@@ -60,18 +60,33 @@ class RoomReserveView(View):
             arrival = request.GET.get('arrival')
             departure = request.GET.get('departure')
             guests = request.GET.get('guests')
-
             available_rateplans = Rateplan.objects.filter(room_id=rid, rateplan_prices__date__gte=arrival,
                                                       rateplan_prices__date__lt=departure,
                                                       rateplan_prices__availability__gt=0,
                                                       ).annotate(total_price=Sum('rateplan_prices__price_1'))
-
-            # available_rateplans = Rateplan.objects.filter(room_id=rid, rateplan_prices__availability__gt=0)
-
-            # price = Price.objects.filter(rateplan_id=rateplan.id, date__gte=arrival, date__lte=departure).annotate(total_price=Sum('price_1'))
-            # for p in price:
-            ctx = {'room': room, 'available_rateplans': available_rateplans}
+            ctx = {'room': room, 'available_rateplans': available_rateplans, 'arrival': arrival, 'departure': departure,
+                   'guests': guests}
         return render(request, 'ota_app/room_reserve.html', ctx)
+
+class ConfirmReservationView(View):
+    def post(self, request):
+        rpid = request.POST.get('rpid')
+        arrival = request.POST.get('arrival')
+        departure = request.POST.get('departure')
+        guests = request.POST.get('guests')
+        user_first_name = request.user.first_name
+        user_last_name = request.user.last_name
+        total_price = request.POST.get('total_price')
+        hotel = Hotel.objects.get(hotel_rooms__room_rateplans__in=[rpid])
+        room = Room.objects.get(room_rateplans__in=[rpid])
+        rateplan = Rateplan.objects.get(id=rpid)
+
+
+
+        ctx = {'hotel': hotel, 'room': room, 'rateplan': rateplan, 'guests': guests, 'arrival': arrival,
+               'departure': departure, 'total_price':total_price}
+        return render(request, 'ota_app/confirm_reservation.html', ctx)
+
 
 
 class HotelDashboardView(View):

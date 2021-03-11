@@ -48,8 +48,14 @@ class HotelOwner(models.Model):
 
 
 class Reservation(models.Model):
-    guest_id = models.ForeignKey(Guest, on_delete=models.PROTECT)
-    price_id = models.ManyToManyField(Room)
+    hotel =models.ForeignKey(Hotel, on_delete=models.PROTECT)
+    guest = models.ForeignKey(Guest, on_delete=models.PROTECT)
+    rateplan = models.ManyToManyField(Rateplan)
+    price = models.DecimalField(max_digits=7, decimal_places=2)
+    arrival = models.DateField()
+    departure= models.DateField()
+    num_of_guests = models.SmallIntegerField()
+
 
 
 # https://docs.djangoproject.com/en/dev/topics/db/queries/#field-lookups
