@@ -1,8 +1,20 @@
 {% include 'ota_app/base.html' %}
 {% block content %}
     <div>
-        data here
+        your recent reservations:
+        <ul>
+        {% for reservation in reservations %}
+            <li>{{ reservation.rateplan.name }} | {{ reservation.guest.first_name }} {{ reservation.guest.last_name }} |
+                arr: {{ reservation.arrival|date:"D d M" }} | {{ reservation.price }}</li>
+        {% endfor %}
+        </ul>
+
+
     <hr>
+    </div>
+    <div>
+        Average rate:
+        {{ total_average|floatformat:"2" }}
     </div>
     <div>
     <h>My rooms:</h>
@@ -22,3 +34,4 @@
         </ul>
     </div>
 {% endblock %}
+

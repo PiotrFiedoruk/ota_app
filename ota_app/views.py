@@ -1,15 +1,14 @@
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, reverse, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views import View
 import datetime
-from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
+from django.views.generic.edit import UpdateView, DeleteView, FormView
 from django.db.models import Avg, Sum
 from ota_app.forms import AddUserForm, LoginForm, AddHotelForm, AddRoomForm
-from ota_app.models import Hotel_owner, Hotel, Room, Rateplan, Price, Reservation
+from ota_app.models import Hotel, Room, Rateplan, Price, Reservation
 from django.contrib.auth.models import Group, User
-import calendar
 
 
 class MainView(View):
@@ -70,25 +69,32 @@ class RoomReserveView(View):
 
 class ConfirmReservationView(View):
     def post(self, request):
+        # get post data:
         rpid = request.POST.get('rpid')
         arrival = request.POST.get('arrival')
         departure = request.POST.get('departure')
         guests = request.POST.get('guests')
-        user_first_name = request.user.first_name
-        user_last_name = request.user.last_name
         total_price = request.POST.get('total_price')
+        # get neccesarily objects:
         hotel_obj = Hotel.objects.get(hotel_rooms__room_rateplans__in=[rpid])
         guest_id = request.user.id
         guest_obj = User.objects.get(id=guest_id)
         rateplan_obj=Rateplan.objects.get(id=rpid)
         room = Room.objects.get(room_rateplans__in=[rpid])
         rateplan = Rateplan.objects.get(id=rpid)
-
+        # save new reservation:
         new_reservation = Reservation.objects.create(hotel=hotel_obj, guest=guest_obj,
                                                      price=int(float(total_price)), arrival=arrival, departure=departure,
                                                      num_of_guests=int(guests))
         new_reservation.save()
+        # assign new reservation to a rateplan
         new_reservation.rateplan.add(rateplan_obj)
+        # decrease room availability for the booked dates:
+        availability_set = Price.objects.filter(rateplan_id__room_id=room, date__range=[arrival, departure])
+        for price in availability_set:
+            price_availability = price.availability
+            price.availability = price_availability -1
+            price.save()
         ctx = {'hotel': hotel_obj, 'room': room, 'rateplan': rateplan, 'guests': guests, 'arrival': arrival,
                'departure': departure, 'total_price':total_price}
         return render(request, 'ota_app/confirm_reservation.html', ctx)
@@ -96,7 +102,17 @@ class ConfirmReservationView(View):
 class HotelDashboardView(View):
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
-        ctx = {'hotel': hotel}
+        reservations = Reservation.objects.filter(hotel=hotel)
+
+        # calculate average prices:
+        total_average = 0
+        date_today = datetime.date.today()
+        date_end = date_today + datetime.timedelta(days=30)
+        average_price = Price.objects.filter(rateplan_id__room_id__hotel_id=hid, date__range=[date_today, date_end])
+        for price in average_price:
+            total_average += price.price_1
+        total_average = total_average / len(average_price)
+        ctx = {'hotel': hotel, 'reservations': reservations, 'total_average': total_average}
         return render(request, 'ota_app/dahsboard.html', ctx)
 
 class HotelCreateView(FormView):
