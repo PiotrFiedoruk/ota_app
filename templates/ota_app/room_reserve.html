@@ -3,22 +3,41 @@
 {% block title %}Room details{% endblock %}
 
 {% block content %}
-
-  <h2>  {{ room.name }}</h2>
-    <p>zdjecia</p>
-    <p>opis</p>
-
-    {% for rateplan in available_rateplans %}
-            {{ rateplan }}
-        {{ rateplan.total_price }}
-        <form method="post" action="{% url 'confirm-reservation' %}">
-        {% csrf_token %}
-            <input type="text" value="{{ rateplan.id }}" name="rpid">
-            <input type="text" value="{{ rateplan.total_price }}" name="total_price">
-            <input type="text" value="{{ arrival }}" name="arrival">
-            <input type="text" value="{{ departure }}" name="departure">
-            <input type="text" value="{{ guests }}" name="guests">
-            <input type="submit" value="Book this rate">
-        </form>
-    {% endfor %}
+<div class="container">
+    <div class="row">
+        <div class="col-7 offset-3">
+            <div>
+                <h2>  {{ room.name }}</h2>
+                <p><img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png" class="img-fluid" alt=""></p>
+                <p>opis</p>
+            </div>
+            <hr>
+            <div class="img-thumbnail bg-light">
+                Most popular amenities:
+            </div>
+            <hr>
+            <div>
+                Arrival: {{ arrival }} - Departure: {{ departure}}
+            </div>
+            <hr>
+            <div>
+            {% for rateplan in available_rateplans %}
+                <div class="img-thumbnail">
+                    {{ rateplan.name }} - {{ rateplan.total_price }} PLN
+                    <form method="post" action="{% url 'confirm-reservation' %}">
+                    {% csrf_token %}
+                    <input type="hidden" value="{{ rateplan.id }}" name="rpid">
+                    <input type="hidden" value="{{ rateplan.total_price }}" name="total_price">
+                    <input type="hidden" value="{{ arrival }}" name="arrival">
+                    <input type="hidden" value="{{ departure }}" name="departure">
+                    <input type="hidden" value="{{ guests }}" name="guests">
+                    <input type="submit" class="btn btn-warning" value="Book this rate">
+                    </form>
+                </div>
+                <br>
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

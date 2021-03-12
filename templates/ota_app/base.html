@@ -1,15 +1,44 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>{% block title %} {% endblock title %}</title>
+    <link rel="stylesheet"  href="{%  static  'css/bootstrap.css'  %}">
+    <link rel="stylesheet"  href="{%  static  'css/image-gallery.css'  %}">
+    <link rel="stylesheet"  href="{%  static  'js/bootstrap.bundle.js'  %}">
 </head>
 <body>
-{% if user.is_authenticated %}
-Hello {{ user.get_username }} <a href="{% url 'logout' %}">Wyloguj</a>
-    {% else %}
-You can login here<a href="{% url 'login' %}">Zaloguj</a>
-{% endif %}
+	<!--Bootstrap Navbar-->
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+	        <a class="navbar-brand" href="/hotdir/index/">hot_app</a>
+	        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02"
+                aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active text-warning" aria-current="page" href="{% url 'main' %}">Home</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Some link</a></li>
+                </ul>
+			<div class="btn-group">
+			    {% if user.is_authenticated %}
+                    <a href="{% url 'create_hotel' %}" class="btn btn-outline-light">Register hotel</a>
+                    <a href="{% url 'logout' %}" class="btn btn-outline-light">{{ user.get_username }} Log out</a>
+                {% else %}
+                    <a href="{% url 'register_user' %}" class="btn btn-outline-light">Sign up</a>
+                    <a href="{% url 'login' %}" class="btn btn-outline-light">Log in</a>
+                {% endif %}
+			</div>
+	    </div>
+	  </div>
+	</nav>
+
+
+
+
 <ul>
 <li><a href="{% url 'main' %}">Main</a></li>
 <li><a href="{% url 'dashboard' 2%}">Dashboard</a></li>

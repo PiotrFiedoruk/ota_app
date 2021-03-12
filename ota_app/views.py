@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django.views import View
 import datetime
 from django.views.generic.edit import UpdateView, DeleteView, FormView
-from django.db.models import Avg, Sum
+from django.db.models import Avg, Sum, Min
 from ota_app.forms import AddUserForm, LoginForm, AddHotelForm, AddRoomForm, AddRateplanForm
 from ota_app.models import Hotel, Room, Rateplan, Price, Reservation
 from django.contrib.auth.models import Group, User
@@ -44,7 +44,7 @@ class HotelDetailsView(View):
             available_rooms_price = hotel.hotel_rooms.filter(
             room_rateplans__rateplan_prices__date__range=[arrival, departure],
             room_rateplans__rateplan_prices__availability__gt=0, ).distinct()\
-                .annotate(avg_price=Avg('room_rateplans__rateplan_prices__price_1'))
+                .annotate(avg_price=Min('room_rateplans__rateplan_prices__price_1'))
         else:
             available_rooms = []
             available_rooms_price = []
@@ -144,11 +144,13 @@ class RoomCreateView(View):
         return render(request, 'ota_app/room_form.html', ctx)
 
     def post(self, request, hid):
-        hotel = Hotel.objects.get(id=hid)
-        name = request.POST.get('name')
-        room = Room.objects.create(hotel_id=hotel, name=name)
-        room.save()
-        return redirect('dashboard', hotel.id)
+        form = AddRoomForm(request.POST)
+        if form.is_valid():
+            hotel = Hotel.objects.get(id=hid)
+            name = form.cleaned_data['name']
+            room = Room.objects.create(hotel_id=hotel, name=name)
+            room.save()
+        return redirect('dashboard', hid)
 
 class RoomUpdateView(UpdateView):
     model = Room
@@ -183,9 +185,9 @@ class RateplanCreateView(View):
     def post(self, request, hid, rid):
         form = AddRateplanForm(request.POST)
         if form.is_valid():
-            name = request.POST.get('name')
-            price_1 = request.POST.get('price_1')
-            price_2 = request.POST.get('price_2')
+            name = form.cleaned_data['name']
+            price_1 = form.cleaned_data['price_1']
+            price_2 = form.cleaned_data['price_2']
             room_obj = Room.objects.get(id=rid)
             hotel_id = room_obj.hotel_id.id
             new_rateplan = Rateplan(name=name, room_id=room_obj)

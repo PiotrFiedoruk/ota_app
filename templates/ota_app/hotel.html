@@ -1,20 +1,97 @@
 {% include 'ota_app/base.html' %}
 
-{% block title %} Hotel details {% endblock %}
-
 {% block content %}
-
-    {{ hotel.name }}
-    {{ hotel.city }}
-    <ul>
-    Available rooms:
+<div class="container">
+    {# change dates form: #}
+    <div class="row">
+        <div class="col-3">
+            <div class="">
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+            </div>
+            <div class="img-thumbnail bg-light">
+                <strong>Change dates:</strong><br>
+                <input type="date" class="form-control" name="date" placeholder="Date"><br>
+                <a href="#" class="btn btn-warning float-end"><strong>Change</strong></a><br><br>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        {# breadcrumbs #}
+        <div class="row">
+            <p><a href="#">{{object.hotel_address_country}}</a> > <a href="#">{{hotel.city}}</a> > <a href="#">{{hotel.name}}</a></p>
+        </div>
+        {#  hotel header#}
+        <div class="">
+        {# hotel-header -  try applying class badge bg-dark instead of <kbd>#}
+            <h4><span class="h6"><sup><kbd>{{hotel.structure_type}}Hotel</kbd></sup></span> {{hotel.name}} {{hotel.star_rating}}<span class="float-end"><kbd>{{ average }}9.0</kbd><small></small></span></h4>
+            {{hotel.street}} Wysoka {{hotel.house_no}}, {{hotel.postcode}}01-234, {{hotel.city}}, {{hotel.country}}Poland<span class="float-end"><sup><small><b>{{ total }} 12 opinii</b></small></sup></span>
+        </div>
+    <!--image gallery-->
+    <div class="col-md-12">
+        <hr>
+        <div class="tiletainer">
+            <div class="tile">
+                <img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png" width="100%">
+            </div>
+            <div class="tile">
+                <img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png" alt="">
+            </div>
+            <div class="tile">
+                <img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png" alt="">
+            </div>
+            <div class="tile">
+                <img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png" alt="">
+            </div>
+            <div class="tile">
+                <img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png" alt="">
+            </div>
+            <div class="tile">
+                <img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png" alt="">
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <br><div class="img-thumbnail bg-light">
+            <strong>Most popular amenities:</strong>
+        </div>
+        <div>
+            <br><p class="text-justify"><strong>{{hotel.summary}}</strong></p>
+            <p>{{hotel.description}}</p>
+        </div>
+        <hr>
+        {% if hotel.restaurant_name %} <!-- check if restaurant exists -->
+        <div>
+            <h5>Restaurant: {{hotel.restaurant_name}}</h5>
+            <img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png" class="float-end" width="20%" alt=""><br>
+            Kuchnia: {{hotel.restaurant_cuisine}}<br>
+            Posiłki: {{hotel.restaurant_meals}}
+            <hr>
+        </div>
+        {% endif %}
+        <div>
+            <h5>Reviews:</h5><br> <!-- display only if more than 5 reviews -->
+            <p>reviews</p>
+            <hr>
+            <br>
+        </div>
+    </div>
+    <hr>
+    <div>
+        Available rooms:
         {% for room in available_rooms_price %}
-            <li> {{ room }} - from {{room.avg_price|floatformat:"0"}} PLN per night -
-            <a href="{% url 'room-reserve' hotel.id room.id %}?city={{ city }}&arrival={{ arrival }}&departure={{ departure }}&guests={{ guests }}">Book</a> </li>
+        <div><img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png" class="float-end" width="20%" alt="">
+            {{ room }} - from {{room.avg_price|floatformat:"0"}} PLN/ night
+            <a href="{% url 'room-reserve' hotel.id room.id %}?city={{ city }}&arrival={{ arrival }}&departure={{ departure }}&guests={{ guests }}" class="btn btn-warning">Room details</a> </div><br>
         {% endfor %}
-    </ul>
-
-
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+</div>
 
 
 
