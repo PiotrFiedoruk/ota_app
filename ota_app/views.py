@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
@@ -8,7 +8,7 @@ import datetime
 from django.views.generic.edit import UpdateView, DeleteView, FormView
 from django.db.models import Avg, Sum, Min
 from ota_app.forms import AddUserForm, LoginForm, AddHotelForm, AddRoomForm, AddRateplanForm
-from ota_app.models import Hotel, Room, Rateplan, Price, Reservation
+from ota_app.models import Hotel, Room, Rateplan, Price, Reservation, Hotel_owner
 from django.contrib.auth.models import Group, User, Permission
 
 
@@ -99,13 +99,15 @@ class ConfirmReservationView(View):
                'departure': departure, 'total_price':total_price}
         return render(request, 'ota_app/confirm_reservation.html', ctx)
 #no post
-class HotelDashboardView(PermissionRequiredMixin, View):
+class HotelDashboardView(LoginRequiredMixin, View):
 
-    permission_required = 'ota_app.view_dashboard'
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
+        hotel_owner_username = hotel.hotel_owner.user.username
+        # check if property belongs to logged in user:
+        if hotel_owner_username != request.user.username:
+            raise Exception('this property does not belong to you')
         reservations = Reservation.objects.filter(hotel=hotel)
-
         # calculate average prices:
         total_average = 0
         date_today = datetime.date.today()
@@ -115,22 +117,31 @@ class HotelDashboardView(PermissionRequiredMixin, View):
         ctx = {'hotel': hotel, 'reservations': reservations, 'total_average': total_average}
         return render(request, 'ota_app/dahsboard.html', ctx)
 #f
-class HotelCreateView(PermissionRequiredMixin, FormView):
+class HotelCreateView(LoginRequiredMixin, FormView):
     permission_required = ('ota_app.view_hotel', 'ota_app.add_hotel',)
     template_name = 'ota_app/hotel_form.html'
     form_class = AddHotelForm
     success_url = '/'
+    login_url = 'login'
 
     def form_valid(self, form):
-        hotel = Hotel.objects.create(
+
+        hotel = Hotel(
             name=form.cleaned_data['name'],
             city=form.cleaned_data['city'],
         )
-        hotel.save()
-        # assign hotel_owner group permission to logged in user
-        hotel_owner_user = self.request.user
+        # assign to user hotel_owner_group permission
+        user = self.request.user
         hotel_owner_group = Group.objects.get(name='hotel_owner_group')
-        hotel_owner_group.user_set.add(hotel_owner_user)
+        hotel_owner_group.user_set.add(user)
+        # assign hotel_owner to hotel:
+        try:
+            hotel_owner = Hotel_owner.objects.get(user=user)
+        except:
+            hotel_owner = Hotel_owner.objects.create(user=user)
+        hotel.hotel_owner = hotel_owner
+        # save hotel:
+        hotel.save()
         return redirect('dashboard', hotel.id)
 
 class HotelUpdateView(PermissionRequiredMixin, UpdateView):
@@ -346,17 +357,14 @@ class CreateUserView(FormView):
     success_url = '/'
 
     def form_valid(self, form):
-        hotel_owner_user = User.objects.create_user(
+        user = User.objects.create_user(
             username=form.cleaned_data['username'],
             first_name=form.cleaned_data['first_name'],
             last_name=form.cleaned_data['last_name'],
             password=form.cleaned_data['password'],
             email=form.cleaned_data['email']
         )
-        hotel_owner_user.save()
-        # assign user to hotel_owner group
-        hotel_owner_group = Group.objects.get(name='hotel_owner_group')
-        hotel_owner_group.user_set.add(hotel_owner_user)
+        user.save()
         return super().form_valid(form)
 
 class LoginView(View):

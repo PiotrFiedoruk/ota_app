@@ -3,7 +3,7 @@
 {% block title %} Register hotel {% endblock %}
 
 {% block content %}
-
+{{ user }}
 <form action="" method="post">
   {% csrf_token %}
   {{ form.as_p }}

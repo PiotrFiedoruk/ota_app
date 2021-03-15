@@ -10,7 +10,7 @@ class Hotel_owner(models.Model):
 class Hotel(models.Model):
     name = models.CharField(max_length=64)
     city = models.CharField(max_length=64)
-    hotel_owner = models.ForeignKey(Hotel_owner, on_delete=models.CASCADE, related_name='hotels_owned', default=1)
+    hotel_owner = models.ForeignKey(Hotel_owner, on_delete=models.CASCADE, related_name='hotels_owned')
     def __str__(self):
         return self.name
 
