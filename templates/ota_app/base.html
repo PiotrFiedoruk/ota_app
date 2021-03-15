@@ -35,7 +35,7 @@
                 </ul>
 			<div class="btn-group">
 			    {% if user.is_authenticated %}
-                    <a href="{% url 'create_hotel' %}" class="btn btn-outline-light">Register hotel</a>
+                    <a href="{% url 'profile' %}" class="btn btn-outline-light">Manage hotels</a>
                     <a href="{% url 'logout' %}" class="btn btn-outline-light">{{ user.get_username }} Log out</a>
                 {% else %}
                     <a href="{% url 'register_user' %}" class="btn btn-outline-light">Sign up</a>
@@ -50,14 +50,10 @@
 
 
 <ul>
-<li><a href="{% url 'main' %}">Main</a></li>
-<li><a href="{% url 'dashboard' 2%}">Dashboard</a></li>
 <li><a href="{% url 'create_hotel' %}">Register hotel</a></li>
 <li><a href="{% url 'create_room' 1 %}">Add room</a></li>
 <li><a href="{% url 'create_rateplan' 1 2%}">Add rateplan</a></li>
-<li><a href="{% url 'create_price' 2 %}">Add price</a></li>
-<li><a href="{% url 'register_user' %}">Create user</a></li>
-<li><a href="{% url 'login' %}">Login</a></li>
+
 </ul>
 {% block content %}
 

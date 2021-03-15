@@ -37,8 +37,8 @@ class Price(models.Model):
         ordering = ["date"]
 
 class Reservation(models.Model):
-    hotel =models.ForeignKey(Hotel, on_delete=models.PROTECT)
-    guest = models.ForeignKey(User, on_delete=models.PROTECT)
+    hotel =models.ForeignKey(Hotel, on_delete=models.PROTECT, related_name='hotel_reservations')
+    guest = models.ForeignKey(User, on_delete=models.PROTECT, related_name='guest_reservations')
     rateplan = models.ManyToManyField(Rateplan)
     price = models.DecimalField(max_digits=7, decimal_places=2)
     arrival = models.DateField()

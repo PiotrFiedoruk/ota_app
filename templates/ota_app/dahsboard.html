@@ -1,19 +1,57 @@
 {% include 'ota_app/base.html' %}
 {% block content %}
-    <h2> hotel: {{ hotel.name }} </h2>
+    <h2> hotel: {{ hotel.name }} </h2><hr>
+    <a href="{% url 'create_price' hotel.id %}">Add price</a> -
+    <hr>
     <div>
-        your recent reservations:
-        <ul>
-        {% for reservation in reservations %}
-            <li>{{ reservation.rateplan.name }} | {{ reservation.guest.first_name }} {{ reservation.guest.last_name }} |
-                arr: {{ reservation.arrival|date:"D d M" }} | {{ reservation.price }}</li>
-        {% endfor %}
-        </ul>
+
+
+
+
+
+
+
+
+        <h4>Recent reservations at {{ hotel.name }}:</h4>
+    <ul>
+    {% for reservation in page_obj %}
+    {# Each "contact" is a Contact model object. #}
+    <li>{{ reservation.rateplan.name }} | {{ reservation.guest.first_name }} {{ reservation.guest.last_name }} |
+        arr: {{ reservation.arrival|date:"D d M" }} | {{ reservation.price }}<br></li>
+
+{% endfor %}
+    </ul>
+<div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
     <hr>
     </div>
     <div>
-        Average rate:
-        {{ total_average|floatformat:"2" }}
+        Average rate in next 30 days: {{ total_average.price_1__avg|floatformat:"2" }} PLN
     </div>
     <div>
     <h>My rooms:</h>

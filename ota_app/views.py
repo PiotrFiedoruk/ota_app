@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMixin
+from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
@@ -98,6 +99,9 @@ class ConfirmReservationView(View):
         ctx = {'hotel': hotel_obj, 'room': room, 'rateplan': rateplan, 'guests': guests, 'arrival': arrival,
                'departure': departure, 'total_price':total_price}
         return render(request, 'ota_app/confirm_reservation.html', ctx)
+
+
+
 #no post
 class HotelDashboardView(LoginRequiredMixin, View):
 
@@ -107,14 +111,26 @@ class HotelDashboardView(LoginRequiredMixin, View):
         # check if property belongs to logged in user:
         if hotel_owner_username != request.user.username:
             raise Exception('this property does not belong to you')
+        # paginate reservations:
         reservations = Reservation.objects.filter(hotel=hotel)
+        paginator = Paginator(reservations, 5)  # Show reservations per page.
+
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+
+
+
+
         # calculate average prices:
         total_average = 0
         date_today = datetime.date.today()
         date_end = date_today + datetime.timedelta(days=30)
+        date_today = datetime.date.today().strftime("%Y-%m-%d")
+        date_end = date_end.strftime("%Y-%m-%d")
         # average price not working:
         total_average = Price.objects.filter(rateplan_id__room_id__hotel_id=hid, date__range=[date_today, date_end]).aggregate(Avg('price_1'))
-        ctx = {'hotel': hotel, 'reservations': reservations, 'total_average': total_average}
+        ctx = {'hotel': hotel, 'reservations': reservations, 'total_average': total_average, 'page_obj': page_obj}
         return render(request, 'ota_app/dahsboard.html', ctx)
 #f
 class HotelCreateView(LoginRequiredMixin, FormView):
@@ -391,4 +407,19 @@ class LoginView(View):
 class LogoutView(View):
     def get(self, request):
         logout(request)
-        return redirect(request.META['HTTP_REFERER'])
+        return redirect('main')
+
+class ProfileView(View):
+    # def test_func(self, hid):
+    #     return len(self.user.request.hotel_owner.hotels_owned.filter(id=hid)) > 0
+
+    def get(self, request):
+        user = request.user
+        # get list of owned hotels:
+        hotels_owned = user.hotel_owner.hotels_owned.all()
+
+        reservations = user.guest_reservations.all().order_by('arrival')
+
+        test = user.has_perm('ota_app.change_hotel')
+        ctx = {'test': test, 'hotels_owned': hotels_owned, 'reservations': reservations}
+        return render(request, 'ota_app/profile_view.html', ctx)
