@@ -4,14 +4,13 @@ from django.db import models
 # Create your models here.
 
 class Hotel_owner(models.Model):
-    first_name = models.CharField(max_length=64)
-    last_name = models.CharField(max_length=64)
-    email = models.EmailField(unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
 
 class Hotel(models.Model):
     name = models.CharField(max_length=64)
     city = models.CharField(max_length=64)
-    # hotel_owner = models.ForeignKey(Hotel_owner, on_delete=models.CASCADE, related_name='hotels_owned', default=1) to add later
+    hotel_owner = models.ForeignKey(Hotel_owner, on_delete=models.CASCADE, related_name='hotels_owned', default=1)
     def __str__(self):
         return self.name
 

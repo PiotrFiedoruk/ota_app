@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
@@ -8,7 +9,8 @@ from django.views.generic.edit import UpdateView, DeleteView, FormView
 from django.db.models import Avg, Sum, Min
 from ota_app.forms import AddUserForm, LoginForm, AddHotelForm, AddRoomForm, AddRateplanForm
 from ota_app.models import Hotel, Room, Rateplan, Price, Reservation
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group, User, Permission
+
 
 # no post
 class MainView(View):
@@ -18,13 +20,11 @@ class MainView(View):
             arrival = request.GET.get('arrival')
             departure = request.GET.get('departure')
             guests = request.GET.get('guests')
-            # departure = (datetime.datetime.strptime(departure, '%Y-%m-%d') - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
             hotelsearch = Hotel.objects.filter(
-                city=city,
-                hotel_rooms__room_rateplans__rateplan_prices__date__range=[arrival, departure],
-                # room__rateplan__prices__price_1__isnull=False,
-                hotel_rooms__room_rateplans__rateplan_prices__availability__gt=0, ).distinct()
-            ctx = {'hotelsearch': hotelsearch, 'city': city, 'arrival': arrival, 'departure': departure, 'guests': guests }
+                city=city, hotel_rooms__room_rateplans__rateplan_prices__date__range=[arrival, departure],
+                hotel_rooms__room_rateplans__rateplan_prices__availability__gt=0).distinct()
+            ctx = {'hotelsearch': hotelsearch, 'city': city, 'arrival': arrival, 'departure': departure,
+                   'guests': guests }
         else:
             ctx = {}
         return render(request, 'ota_app/main.html', ctx)
@@ -99,7 +99,9 @@ class ConfirmReservationView(View):
                'departure': departure, 'total_price':total_price}
         return render(request, 'ota_app/confirm_reservation.html', ctx)
 #no post
-class HotelDashboardView(View):
+class HotelDashboardView(PermissionRequiredMixin, View):
+
+    permission_required = 'ota_app.view_dashboard'
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
         reservations = Reservation.objects.filter(hotel=hotel)
@@ -108,14 +110,13 @@ class HotelDashboardView(View):
         total_average = 0
         date_today = datetime.date.today()
         date_end = date_today + datetime.timedelta(days=30)
-        average_price = Price.objects.filter(rateplan_id__room_id__hotel_id=hid, date__range=[date_today, date_end])
-        for price in average_price:
-            total_average += price.price_1
-        total_average = total_average / len(average_price)
+        # average price not working:
+        total_average = Price.objects.filter(rateplan_id__room_id__hotel_id=hid, date__range=[date_today, date_end]).aggregate(Avg('price_1'))
         ctx = {'hotel': hotel, 'reservations': reservations, 'total_average': total_average}
         return render(request, 'ota_app/dahsboard.html', ctx)
 #f
-class HotelCreateView(FormView):
+class HotelCreateView(PermissionRequiredMixin, FormView):
+    permission_required = ('ota_app.view_hotel', 'ota_app.add_hotel',)
     template_name = 'ota_app/hotel_form.html'
     form_class = AddHotelForm
     success_url = '/'
@@ -132,12 +133,14 @@ class HotelCreateView(FormView):
         hotel_owner_group.user_set.add(hotel_owner_user)
         return redirect('dashboard', hotel.id)
 
-class HotelUpdateView(UpdateView):
+class HotelUpdateView(PermissionRequiredMixin, UpdateView):
+    permission_required = ('ota_app.view_hotel', 'ota_app.add_hotel',)
     model = Hotel
     fields = '__all__'
     template_name_suffix = '_update_form'
 #f
-class RoomCreateView(View):
+class RoomCreateView(PermissionRequiredMixin, View):
+    permission_required = ('ota_app.view_room', 'ota_app.add_room',)
     def get(self, request, hid):
         form = AddRoomForm
         ctx = {'form': form}
@@ -152,7 +155,8 @@ class RoomCreateView(View):
             room.save()
         return redirect('dashboard', hid)
 
-class RoomUpdateView(UpdateView):
+class RoomUpdateView(PermissionRequiredMixin, UpdateView):
+    permission_required = ('ota_app.view_room', 'ota_app.add_room',)
     model = Room
     fields = '__all__'
     template_name_suffix = '_update_form'
@@ -162,7 +166,8 @@ class RoomUpdateView(UpdateView):
         hotel_id = room.hotel_id_id
         return reverse_lazy('dashboard', kwargs = {'hid': hotel_id})
 
-class RoomDeleteView(DeleteView):
+class RoomDeleteView(PermissionRequiredMixin, DeleteView):
+    permission_required = ('ota_app.view_hotel', 'ota_app.delete_hotel')
     model = Room
     # define success url:
     def get_success_url(self):
@@ -177,7 +182,8 @@ class RoomDetailsView(View):
         ctx = {'room': room}
         return render(request, 'ota_app/room_details.html', ctx)
 
-class RateplanCreateView(View):
+class RateplanCreateView(PermissionRequiredMixin, View):
+    permission_required = ('ota_app.view_rateplan', 'ota_app.add.rateplan',)
     def get(self, request, hid, rid):
         form = AddRateplanForm()
         return render(request, 'ota_app/rateplan_form.html', {'form': form})
@@ -201,7 +207,8 @@ class RateplanCreateView(View):
                                      price_2=price_2, availability=0)
             return redirect('dashboard', hotel_id)
 
-class RateplanUpdateView(UpdateView):
+class RateplanUpdateView(PermissionRequiredMixin, UpdateView):
+    permission_required = ('ota_app.view_rateplan', 'ota_app.change_rateplan',)
     model = Rateplan
     fields = ['name']
     template_name_suffix = '_update_form'
@@ -210,25 +217,30 @@ class RateplanUpdateView(UpdateView):
         hotel_id = rateplan.room_id.hotel_id_id
         return reverse_lazy('dashboard', kwargs={'hid': hotel_id})
 
-class RateplanDeleteView(DeleteView):
+class RateplanDeleteView(PermissionRequiredMixin, DeleteView):
+    permission_required = ('ota_app.view_hotel', 'ota_app.delete_hotel',)
     model = Rateplan
     def get_success_url(self):
         rateplan = self.object
         hotel_id = rateplan.room_id.hotel_id_id
         return reverse_lazy('dashboard', kwargs={'hid': hotel_id})
 
-class PriceCreateView(View): #price calendar
+class PriceCreateView(PermissionRequiredMixin, View): #price calendar
+    permission_required = ('ota_app.view_price', 'ota_app.add_price', 'ota_app.change_price')
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
         # define start and end date for price list. if start date not provided in url, set it to today's date
         if 'date' in request.GET:
             start_date = request.GET.get('date')
-            start_date = datetime.datetime.strptime(start_date,
-                                                    '%Y-%m-%d').date()  # convert string date to datetime object so it can be used in timedlta
+            start_date = datetime.datetime.strptime(start_date,'%Y-%m-%d').date()  # convert string date to datetime object so it can be used in timedlta
+            if start_date < datetime.date.today(): # changing past prices not allowed
+                start_date = datetime.date.today()
         else:
-            start_date = datetime.datetime.today().date()
+            start_date = datetime.date.today()
         end_date = start_date + datetime.timedelta(days=14)  # set number of calendar days here
         prev_date = start_date - datetime.timedelta(days=14)  # get previous date for navigation links
+        if prev_date < datetime.date.today(): # changing past prices not allowed
+            prev_date = datetime.date.today()
         # create price form:
         form = ""
         for room in hotel.hotel_rooms.all():
@@ -252,6 +264,7 @@ class PriceCreateView(View): #price calendar
                     form = form + "</td>"
                 form = form + "</tr></table>"
                 loop += 1
+
         ctx = {'hotel': hotel, 'start_date': start_date, 'end_date': end_date, 'prev_date': prev_date, 'form': form}
         return render(request, 'ota_app/add_price.html', ctx)
 
@@ -293,7 +306,8 @@ class PriceCreateView(View): #price calendar
                 loop += 1
         return redirect('create_price', hid)
 
-class PriceUpdateView(View): #batch update
+class PriceUpdateView(PermissionRequiredMixin, View): #batch update
+    permission_required = ('ota_app.view_price', 'ota_app.add_price', 'ota_app.change_price')
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
         rateplans = Rateplan.objects.filter(room_id__hotel_id_id=hid)

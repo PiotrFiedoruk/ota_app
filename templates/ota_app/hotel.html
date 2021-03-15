@@ -82,7 +82,10 @@
     <div>
         Available rooms:
         {% for room in available_rooms_price %}
-        <div><img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png" class="float-end" width="20%" alt="">
+        <div class="img-thumbnail bg-light">
+
+            <img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png"
+                                                 class="float-end" width="20%" alt="">
             {{ room }} - from {{room.avg_price|floatformat:"0"}} PLN/ night
             <a href="{% url 'room-reserve' hotel.id room.id %}?city={{ city }}&arrival={{ arrival }}&departure={{ departure }}&guests={{ guests }}" class="btn btn-warning">Room details</a> </div><br>
         {% endfor %}
