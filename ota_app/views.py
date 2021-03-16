@@ -269,13 +269,14 @@ class PriceCreateView(PermissionRequiredMixin, View): #price calendar
         # create price form:
         form = ""
         for room in hotel.hotel_rooms.all():
-            form = form + f"<p>{room.name}</p>"
+            form = form + f"<p><h3>{room.name}</h3></p>"
             loop = 1
             for rateplan in room.room_rateplans.all():
-                form = form + f"<table class=''><tr>"
-                form = form + f"<td><input type='text' disabled value='{rateplan.name}'>" \
-                              "<input type='text' disabled value='price 1'>" \
-                              "<input type='text' disabled value='price 2'></td>"
+                form = form + f"<p><strong>{rateplan.name}</strong></p>"
+                form = form + f"<table class='table' style='table-layout: fixed'><tr>"
+                # form = form + f"<td witdh='30'><input type='text' disabled value='{rateplan.name}'>" \
+                #               "<input type='text' disabled value='price 1'>" \
+                #               "<input type='text' disabled value='price 2'></td>"
                 for price in rateplan.rateplan_prices.filter(date__gte=start_date, date__lte=end_date):
                     form = form + "<td>"
                     if loop == 1:

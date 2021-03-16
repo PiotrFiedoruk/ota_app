@@ -4,17 +4,24 @@
 {% endblock %}
 
 {% block content %}
-<p><a href="{% url 'update_price' hotel.id %}">batch update</a></p>
-
-<p><a href="/add-price/{{ hotel.id }}?date={{ prev_date|date:"Y-m-d" }}">prev</a>
-    <a href="/add-price/{{ hotel.id }}?date={{ end_date|date:"Y-m-d" }}">next</a></p>
-<form method="post">
-{% csrf_token %}
-    {{ form|safe }}
-<input type="submit">
-</form>
-
-
+    <div class="container">
+        <h2 class="text-center">Price update</h2>
+        <hr>
+        <div class="text-center"><a href="{% url 'update_price' hotel.id %}" class="btn btn-info">update by dates</a></div>
+            <div class="d-flex justify-content-between">
+                <strong><a href="/add-price/{{ hotel.id }}?date={{ prev_date|date:"Y-m-d" }}"><i class="far fa-caret-square-left"></i> prev </a></strong>
+                <strong><a href="/add-price/{{ hotel.id }}?date={{ end_date|date:"Y-m-d" }}">next <i class="far fa-caret-square-right"></i></a></strong>
+            </div>
+            <form method="post">
+            {% csrf_token %}
+            <div class="table-responsive">
+                {{ form|safe }}
+            </div>
+            <div class="text-center">
+                <input class="btn btn-warning" type="submit" value="update prices">
+            </div>
+        </form>
+    </div>
 {% endblock %}
 
 
