@@ -1,9 +1,15 @@
-{% include 'ota_app/base.html' %}
+{% extends 'ota_app/base.html' %}
 
 {% block content %}
-    <form action="" method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <input type="submit" value="Save">
-    </form>
+    <div class="container">
+        <h2 class="text-center">Edit hotel</h2>
+        <hr>
+        <div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 ">
+            <form action="" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <input type="submit" class="btn btn-warning" value="Save">
+            </form>
+        </div>
+    </div>
 {% endblock %}

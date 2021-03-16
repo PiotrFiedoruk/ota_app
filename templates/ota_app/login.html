@@ -1,12 +1,16 @@
-{% include 'ota_app/base.html' %}
+{% extends 'ota_app/base.html' %}
 
 {% block title %} Login {% endblock %}
 
 {% block content %}
-
-<form action="" method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <input type="submit" value="Login"></form>
-
+    <h2 class="text-center">Login</h2>
+    <hr>
+    <div class="container">
+        <div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 text-center">
+            <form action="" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <input type="submit" class="btn btn-warning" value="Login"></form>
+        </div>
+    </div>
 {% endblock %}

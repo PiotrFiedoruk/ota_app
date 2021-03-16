@@ -1,21 +1,18 @@
-{% include 'ota_app/base.html' %}
+{% extends 'ota_app/base.html' %}
 
 {% block title %} Profile view {% endblock %}
 
 {% block content %}
-    {{ test }}<br>
-{{ user }}<br>
-    Hotels owned:
-    <ul>
-    {% for hotel in hotels_owned %}
-    <li><a href="{% url 'dashboard' hotel.id %}" >{{ hotel.name}} {{ hotel.id }}</a></li>
-    {% endfor %}
-    </ul>
+    <div class="container">
+        <h2 class="text-center">My reservations:</h2>
+        <hr>
+        <div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 ">
 
-    My reservations:
-    <ul>
-    {% for reservation in reservations %}
-        <li>{{ reservation.hotel}} - {{reservation.arrival|date:"D-d-M"}} - {{reservation.departure|date:"D-d-M" }}</li>
-    {% endfor %}
-    </ul>
+            <ul>
+            {% for reservation in reservations %}
+                <li>{{ reservation.hotel}} - {{reservation.arrival|date:"D-d-M"}} - {{reservation.departure|date:"D-d-M" }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
 {% endblock %}

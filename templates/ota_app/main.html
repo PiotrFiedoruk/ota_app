@@ -1,18 +1,17 @@
-{% include 'ota_app/base.html' %}
-
+{% extends 'ota_app/base.html' %}
 {% block title %}
 {% endblock %}
-
 {% block content %}
-
 <div class="container">
+    <h2 class="text-center">Find your hotel</h2>
+    <hr>
     <div class="row">
         <form method = "get">
             city: <input type="text" name="city">
             arrival: <input type="date" name="arrival">
             departure: <input type="date" name="departure">
             guests: <input type="number" name="guests">
-            <input type="submit" value="search">
+            <input type="submit" class="btn btn-warning"  value="search">
         </form>
     </div>
     <div class="row">
@@ -26,5 +25,6 @@
             </div>
         {% endfor %}
     </div>
+    <hr>
 </div>
 {% endblock %}

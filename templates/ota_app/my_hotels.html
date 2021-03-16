@@ -1,0 +1,16 @@
+{% extends 'ota_app/base.html' %}
+{% block title %} My hotels view {% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h2 class="text-center">My hotels</h2>
+        <hr>
+        <div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 ">
+            <ul>
+            {% for hotel in hotels_owned %}
+            <li><a href="{% url 'dashboard' hotel.id %}" >{{ hotel.name}} {{ hotel.id }}</a></li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}

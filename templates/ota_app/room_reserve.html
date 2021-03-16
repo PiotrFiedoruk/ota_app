@@ -1,21 +1,33 @@
-{% include 'ota_app/base.html' %}
+{% extends 'ota_app/base.html' %}
 
-{% block title %}Room details{% endblock %}
+{% block title %}Reserve {{ room.name }}{% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="row">
-        <div class="col-7 offset-3">
-            <div>
-                <h2>  {{ room.name }}</h2>
+<div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 ">
+<h2>  {{ room.name }}</h2>
+            <hr>
+            <div class="row">
+
+            <div class="col-6">
+
                 <p><img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png" class="img-fluid" alt=""></p>
+
+            </div>
+            <div class="col-6">
                 <p>opis</p>
             </div>
+            </div>
             <hr>
+
+            <div class="row">
+            <div class="col-6">
             <div class="img-thumbnail bg-light">
                 Most popular amenities:
             </div>
+            </div>
             <hr>
+            <div class="col-6">
             <div>
                 Arrival: {{ arrival }} - Departure: {{ departure}}
             </div>
@@ -37,7 +49,8 @@
                 <br>
             {% endfor %}
             </div>
-        </div>
+            </div>
+            </div>
     </div>
 </div>
 {% endblock %}

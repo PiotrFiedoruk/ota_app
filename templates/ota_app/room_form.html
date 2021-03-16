@@ -1,12 +1,16 @@
-{% include 'ota_app/base.html' %}
+{% extends 'ota_app/base.html' %}
 
 {% block title %} Add room {% endblock %}
 
 {% block content %}
-
+<div class="container">
+<div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 ">
+    <h2>Add new room</h2>
+    <hr>
 <form action="" method="post">
   {% csrf_token %}
   {{ form.as_p }}
-  <input type="submit" value="Save"></form>
-
+  <input type="submit" class="btn btn-warning" value="Save"></form>
+    </div>
+    </div>
 {% endblock %}

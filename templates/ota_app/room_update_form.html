@@ -1,10 +1,16 @@
-{% include 'ota_app/base.html' %}
-
+{% extends 'ota_app/base.html' %}
+{% block title %}Edit {{ room.name }}{% endblock %}
 {% block content %}
+    <div class="container">
+<div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 ">
+    <h2>Edit {{ room.name }}</h2><a href="{% url 'delete_room' room.id%}" class="btn btn-danger">delete this room</a>
+    <hr>
     <form action="" method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <input type="submit" value="Save">
+        <input type="submit" class="btn btn-warning" value="Save">
     </form>
-    <a href="{% url 'delete_room' room.id%}">delete room</a>
+
+        </div>
+    </div>
 {% endblock %}

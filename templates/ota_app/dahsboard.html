@@ -1,74 +1,58 @@
-{% include 'ota_app/base.html' %}
+{% extends 'ota_app/base.html' %}
+{% block title %}{{ hotel.name }} - Dashboard{% endblock %}
 {% block content %}
-    <h2> hotel: {{ hotel.name }} </h2><hr>
-    <a href="{% url 'create_price' hotel.id %}">Add price</a> -
-    <hr>
-    <div>
-
-
-
-
-
-
-
-
-        <h4>Recent reservations at {{ hotel.name }}:</h4>
-    <ul>
-    {% for reservation in page_obj %}
-    {# Each "contact" is a Contact model object. #}
-    <li>{{ reservation.rateplan.name }} | {{ reservation.guest.first_name }} {{ reservation.guest.last_name }} |
-        arr: {{ reservation.arrival|date:"D d M" }} | {{ reservation.price }}<br></li>
-
-{% endfor %}
-    </ul>
-<div class="pagination">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-        {% endif %}
-
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
-
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">next</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-        {% endif %}
-    </span>
-</div>
-
-
-
-
-
-
-
-
-
-
-    <hr>
-    </div>
-    <div>
-        Average rate in next 30 days: {{ total_average.price_1__avg|floatformat:"2" }} PLN
-    </div>
-    <div>
-    <h>My rooms:</h>
-        <ul>
-        {% for room in hotel.hotel_rooms.all %}
-            <li> <a href="{% url 'details-room' hotel.id room.id %}">{{  room.name }}</a></li>
-                <ul>
-            {% for rateplan in room.room_rateplans.all %}
-                <li>{{ rateplan.name }} - <a href="{% url 'update_rateplan' rateplan.id%}">edit</a> -
-                    <a href="{% url 'create_price' hotel.id%}">prices</a></li>
-
+<div class="container">
+    <div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 ">
+        <h2>{{ hotel.name }} </h2>
+        <a href="{% url 'update_hotel' hotel.id %}" class="btn btn-dark">edit hotel details</a>
+        <hr>
+        <div>
+            <h4>Recent reservations at {{ hotel.name }}:</h4>
+            <ul>
+            {% for reservation in page_obj %}
+            {# Each "contact" is a Contact model object. #}
+            <li>{{ reservation.rateplan.name }} | {{ reservation.guest.first_name }} {{ reservation.guest.last_name }} |
+            arr: {{ reservation.arrival|date:"D d M" }} | {{ reservation.price }}<br></li>
             {% endfor %}
-            <li> <a href="{% url 'create_rateplan' hotel.id room.id%}">add</a> </li>
             </ul>
-        {% endfor %}
-        <li><a href="{% url 'create_room' hotel.id %}">add new room</a></li>
-        </ul>
+            <div class="pagination">
+                <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+                <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+                </span>
+            </div>
+            <hr>
+        </div>
+        <div>
+            Average rate in next 30 days: {{ total_average.price_1__avg|floatformat:"2" }} PLN
+        </div>
+        <div>
+        <h>My rooms:</h>
+            <ul>
+            {% for room in hotel.hotel_rooms.all %}
+                <li> <a href="{% url 'details-room' hotel.id room.id %}">{{  room.name }}</a></li>
+                    <ul>
+                {% for rateplan in room.room_rateplans.all %}
+                    <li>{{ rateplan.name }} - <a href="{% url 'update_rateplan' rateplan.id%}">edit</a> -
+                        <a href="{% url 'create_price' hotel.id%}">prices</a></li>
+
+                {% endfor %}
+                <li> <a href="{% url 'create_rateplan' hotel.id room.id%}">+ add rateplan</a> </li>
+                </ul>
+            {% endfor %}
+            <li><a href="{% url 'create_room' hotel.id %}">+ add new room</a></li>
+            </ul>
+        </div>
     </div>
+</div>
 {% endblock %}
 

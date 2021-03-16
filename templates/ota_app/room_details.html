@@ -1,11 +1,16 @@
-{% include 'ota_app/base.html' %}
+{% extends 'ota_app/base.html' %}
 
 {% block title %}Room details{% endblock %}
-
 {% block content %}
-
+<div class="container">
+<div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 ">
 <h2>{{ room.name }}</h2>
+    <hr>
     <ul>
 <li><a href="{% url 'update_room' room.id %}">edit room</a></li>
+        <li><a href="{% url 'delete_room' room.id %}">delete room</a></li>
     </ul>
+</div>
+</div>
 {% endblock %}
+

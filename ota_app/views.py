@@ -100,8 +100,6 @@ class ConfirmReservationView(View):
                'departure': departure, 'total_price':total_price}
         return render(request, 'ota_app/confirm_reservation.html', ctx)
 
-
-
 #no post
 class HotelDashboardView(LoginRequiredMixin, View):
 
@@ -163,7 +161,7 @@ class HotelCreateView(LoginRequiredMixin, FormView):
 class HotelUpdateView(PermissionRequiredMixin, UpdateView):
     permission_required = ('ota_app.view_hotel', 'ota_app.add_hotel',)
     model = Hotel
-    fields = '__all__'
+    fields = ('name',)
     template_name_suffix = '_update_form'
 #f
 class RoomCreateView(PermissionRequiredMixin, View):
@@ -185,7 +183,7 @@ class RoomCreateView(PermissionRequiredMixin, View):
 class RoomUpdateView(PermissionRequiredMixin, UpdateView):
     permission_required = ('ota_app.view_room', 'ota_app.add_room',)
     model = Room
-    fields = '__all__'
+    fields = ('name',)
     template_name_suffix = '_update_form'
     # define success url:
     def get_success_url(self):
@@ -194,7 +192,7 @@ class RoomUpdateView(PermissionRequiredMixin, UpdateView):
         return reverse_lazy('dashboard', kwargs = {'hid': hotel_id})
 
 class RoomDeleteView(PermissionRequiredMixin, DeleteView):
-    permission_required = ('ota_app.view_hotel', 'ota_app.delete_hotel')
+    permission_required = ('ota_app.view_hotel', 'ota_app.delete_room')
     model = Room
     # define success url:
     def get_success_url(self):
@@ -210,7 +208,7 @@ class RoomDetailsView(View):
         return render(request, 'ota_app/room_details.html', ctx)
 
 class RateplanCreateView(PermissionRequiredMixin, View):
-    permission_required = ('ota_app.view_rateplan', 'ota_app.add.rateplan',)
+    permission_required = ('ota_app.view_rateplan', 'ota_app.add_rateplan',)
     def get(self, request, hid, rid):
         form = AddRateplanForm()
         return render(request, 'ota_app/rateplan_form.html', {'form': form})
@@ -245,7 +243,7 @@ class RateplanUpdateView(PermissionRequiredMixin, UpdateView):
         return reverse_lazy('dashboard', kwargs={'hid': hotel_id})
 
 class RateplanDeleteView(PermissionRequiredMixin, DeleteView):
-    permission_required = ('ota_app.view_hotel', 'ota_app.delete_hotel',)
+    permission_required = ('ota_app.view_hotel', 'ota_app.delete_rateplan',)
     model = Rateplan
     def get_success_url(self):
         rateplan = self.object
@@ -370,7 +368,7 @@ class PriceUpdateView(PermissionRequiredMixin, View): #batch update
 class CreateUserView(FormView):
     template_name = 'ota_app/hotelowner_form.html'
     form_class = AddUserForm
-    success_url = '/'
+    success_url = '/login'
 
     def form_valid(self, form):
         user = User.objects.create_user(
@@ -412,14 +410,17 @@ class LogoutView(View):
 class ProfileView(View):
     # def test_func(self, hid):
     #     return len(self.user.request.hotel_owner.hotels_owned.filter(id=hid)) > 0
+    def get(self, request):
+        user = request.user
+        # get list of owned hotels:
+        reservations = user.guest_reservations.all().order_by('arrival')
+        ctx = {'reservations': reservations}
+        return render(request, 'ota_app/profile_view.html', ctx)
 
+class MyHotelsView(View):
     def get(self, request):
         user = request.user
         # get list of owned hotels:
         hotels_owned = user.hotel_owner.hotels_owned.all()
-
-        reservations = user.guest_reservations.all().order_by('arrival')
-
-        test = user.has_perm('ota_app.change_hotel')
-        ctx = {'test': test, 'hotels_owned': hotels_owned, 'reservations': reservations}
-        return render(request, 'ota_app/profile_view.html', ctx)
+        ctx = {'hotels_owned': hotels_owned}
+        return render(request, 'ota_app/my_hotels.html', ctx)
