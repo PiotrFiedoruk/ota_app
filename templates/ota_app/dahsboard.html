@@ -12,7 +12,8 @@
             {% for reservation in page_obj %}
             {# Each "contact" is a Contact model object. #}
             <li>{{ reservation.rateplan.name }} | {{ reservation.guest.first_name }} {{ reservation.guest.last_name }} |
-            arr: {{ reservation.arrival|date:"D d M" }} | {{ reservation.price }}<br></li>
+            arr: {{ reservation.arrival|date:"D d M" }} | {{ reservation.price }} |
+                {{ reservation.get_status_display }}<br></li>
             {% endfor %}
             </ul>
             <div class="pagination">
@@ -35,19 +36,22 @@
         <div>
             Average rate in next 30 days: {{ total_average.price_1__avg|floatformat:"2" }} PLN
         </div>
-        <div>
+        <hr>
+        <div class="col-5">
         <h>My rooms:</h>
             <ul>
             {% for room in hotel.hotel_rooms.all %}
-                <li> <a href="{% url 'details-room' hotel.id room.id %}">{{  room.name }}</a></li>
-                    <ul>
-                {% for rateplan in room.room_rateplans.all %}
-                    <li>{{ rateplan.name }} - <a href="{% url 'update_rateplan' rateplan.id%}">edit</a> -
-                        <a href="{% url 'create_price' hotel.id%}">prices</a></li>
+                <div class="img-thumbnail">
+                    <li> <a href="{% url 'details-room' hotel.id room.id %}">{{  room.name }}</a></li>
+                        <ul>
+                    {% for rateplan in room.room_rateplans.all %}
+                        <li>{{ rateplan.name }} - <a href="{% url 'update_rateplan' rateplan.id%}">edit</a> -
+                            <a href="{% url 'create_price' hotel.id%}">prices</a></li>
 
-                {% endfor %}
-                <li> <a href="{% url 'create_rateplan' hotel.id room.id%}">+ add rateplan</a> </li>
-                </ul>
+                    {% endfor %}
+                    <li> <a href="{% url 'create_rateplan' hotel.id room.id%}">+ add rateplan</a> </li>
+                    </ul>
+                </div>
             {% endfor %}
             <li><a href="{% url 'create_room' hotel.id %}">+ add new room</a></li>
             </ul>

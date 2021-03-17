@@ -37,13 +37,22 @@ class Price(models.Model):
         ordering = ["date"]
 
 class Reservation(models.Model):
+    RESERVATION_STATUS = (('Act', 'Active'), ('CLX', 'Cancelled'))
     hotel =models.ForeignKey(Hotel, on_delete=models.PROTECT, related_name='hotel_reservations')
     guest = models.ForeignKey(User, on_delete=models.PROTECT, related_name='guest_reservations')
+    room = models.ForeignKey(Room, on_delete=models.PROTECT, related_name='guest_reservations')
     rateplan = models.ManyToManyField(Rateplan)
     price = models.DecimalField(max_digits=7, decimal_places=2)
     arrival = models.DateField()
     departure= models.DateField()
     num_of_guests = models.SmallIntegerField()
+    status = models.CharField(choices=RESERVATION_STATUS, max_length=12)
+
+class Review(models.Model):
+    hotel_id = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_reviews')
+    title = models.CharField(max_length=256)
+    text = models.TextField(max_length=3000)
+
 
 
 

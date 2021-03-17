@@ -1,0 +1,24 @@
+{% extends 'ota_app/base.html' %}
+
+{% block title %} Reservation details {% endblock %}
+
+{% block content %}
+    <div class="container">
+    <h2 class="text-center">Reservation details</h2>
+    <hr>
+        <div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 text-center">
+            <p>dates: {{ reservation.arrival }} - {{ reservation.departure }}</p>
+            <p>hotel: {{ reservation.hotel }}</p>
+            <p>room: {{ reservation.room }}</p>
+            <p>guests: {{ reservation.num_of_guests }}</p>
+            <p>main guest name: {{ reservation.guest.first_name }} {{ reservation.guest.last_name }}</p>
+            <p>price: {{ reservation.price }}</p>
+            <p>{{ reservation.rateplan.name }}</p>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="resid" value="{{ reservation.id }}">
+                <input type="submit" class="btn btn-danger" value="cancel">
+            </form>
+        </div>
+    </div>
+{% endblock %}

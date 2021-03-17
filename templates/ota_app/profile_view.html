@@ -7,10 +7,11 @@
         <h2 class="text-center">My reservations:</h2>
         <hr>
         <div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 ">
-
             <ul>
             {% for reservation in reservations %}
-                <li>{{ reservation.hotel}} - {{reservation.arrival|date:"D-d-M"}} - {{reservation.departure|date:"D-d-M" }}</li>
+                <li><a href="{% url 'reservation_details' reservation.id %}">{{ reservation.hotel}}
+                    - {{reservation.arrival|date:"D-d-M"}} - {{reservation.departure|date:"D-d-M" }}
+                - {{ reservation.get_status_display  }}</a></li>
             {% endfor %}
             </ul>
         </div>
