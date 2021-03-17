@@ -8,9 +8,13 @@ class Hotel_owner(models.Model):
 
 
 class Hotel(models.Model):
+    FACILITIES = (('Act', 'Active'), ('CLX', 'Cancelled'))
+    hotel_owner = models.ForeignKey(Hotel_owner, on_delete=models.CASCADE, related_name='hotels_owned')
     name = models.CharField(max_length=64)
     city = models.CharField(max_length=64)
-    hotel_owner = models.ForeignKey(Hotel_owner, on_delete=models.CASCADE, related_name='hotels_owned')
+    street = models.CharField(max_length=128)
+    description = models.TextField(max_length=1200)
+    facilities = models.Choices()
     def __str__(self):
         return self.name
 
@@ -47,11 +51,19 @@ class Reservation(models.Model):
     departure= models.DateField()
     num_of_guests = models.SmallIntegerField()
     status = models.CharField(choices=RESERVATION_STATUS, max_length=12)
+    created= models.DateTimeField(auto_now_add=True)
 
 class Review(models.Model):
-    hotel_id = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_reviews')
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='hotel_reviews')
+    guest = models.ForeignKey(User, on_delete=models.CASCADE, related_name='guest_reviews')
     title = models.CharField(max_length=256)
     text = models.TextField(max_length=3000)
+    score_overall = models.SmallIntegerField()
+    score_location = models.SmallIntegerField()
+    score_cleaning = models.SmallIntegerField()
+    score_service = models.SmallIntegerField()
+    created = models.DateTimeField(auto_now_add=True)
+
 
 
 

@@ -1,0 +1,18 @@
+{% extends 'ota_app/base.html' %}
+
+{% block title %} Review details {% endblock %}
+
+{% block content %}
+<div class="container">
+<div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 ">
+    <h2>Review details</h2>
+    <hr>
+    <h4>{{ review.title }} | {{ review.guest.first_name }} {{ review.guest.last_name }}</h4>
+    Overall: <p>{{ review.score_overall }}</p>
+    Location: <p>{{ review.score_location }}</p>
+    Cleaning: <p>{{ review.score_cleaning }}</p>
+    Service: <p>{{ review.score_service }}</p>
+    <p>{{ review.text }}</p>
+    </div>
+    </div>
+{% endblock %}

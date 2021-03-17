@@ -34,11 +34,20 @@
             <hr>
         </div>
         <div>
+            <h4>Recent reviews:</h4>
+            {% for review in reviews %}
+                {{ review.title }} | {{ review.guest.first_name }} {{ review.guest.last_name }} | {{ review.created|date:"D d M" }}
+                | <a href="{% url 'review_details' review.id %}">view</a>
+            {% endfor %}
+        </div>
+        <hr>
+        <div>
             Average rate in next 30 days: {{ total_average.price_1__avg|floatformat:"2" }} PLN
         </div>
         <hr>
+        <h4>My rooms:</h4>
         <div class="col-5">
-        <h>My rooms:</h>
+
             <ul>
             {% for room in hotel.hotel_rooms.all %}
                 <div class="img-thumbnail">
@@ -47,7 +56,6 @@
                     {% for rateplan in room.room_rateplans.all %}
                         <li>{{ rateplan.name }} - <a href="{% url 'update_rateplan' rateplan.id%}">edit</a> -
                             <a href="{% url 'create_price' hotel.id%}">prices</a></li>
-
                     {% endfor %}
                     <li> <a href="{% url 'create_rateplan' hotel.id room.id%}">+ add rateplan</a> </li>
                     </ul>

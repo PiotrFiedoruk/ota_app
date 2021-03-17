@@ -11,7 +11,7 @@
             {% for reservation in reservations %}
                 <li><a href="{% url 'reservation_details' reservation.id %}">{{ reservation.hotel}}
                     - {{reservation.arrival|date:"D-d-M"}} - {{reservation.departure|date:"D-d-M" }}
-                - {{ reservation.get_status_display  }}</a></li>
+                - {{ reservation.get_status_display  }}</a> - <a href="{% url 'create_review' reservation.hotel.id %}">add review</a></li>
             {% endfor %}
             </ul>
         </div>

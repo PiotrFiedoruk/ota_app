@@ -8,8 +8,8 @@ from django.views import View
 import datetime
 from django.views.generic.edit import UpdateView, DeleteView, FormView
 from django.db.models import Avg, Sum, Min
-from ota_app.forms import AddUserForm, LoginForm, AddHotelForm, AddRoomForm, AddRateplanForm
-from ota_app.models import Hotel, Room, Rateplan, Price, Reservation, Hotel_owner
+from ota_app.forms import AddUserForm, LoginForm, AddHotelForm, AddRoomForm, AddRateplanForm, AddReviewForm
+from ota_app.models import Hotel, Room, Rateplan, Price, Reservation, Hotel_owner, Review
 from django.contrib.auth.models import Group, User, Permission
 
 
@@ -36,6 +36,11 @@ class MainView(View):
 class HotelDetailsView(View):
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
+        # get reviews querysets
+        reviews = Review.objects.filter(hotel_id=hid)
+        reviews_avg = reviews.aggregate(Avg('score_overall'))
+        reviews_tot = len(reviews)
+
         #display available rooms if dates are known. Get list of available rooms and rooms with no availability
         # on any given date. Then compare both querysets using 'difference'. Check for easier way!
         if 'arrival' in request.GET:
@@ -63,7 +68,8 @@ class HotelDetailsView(View):
             available_rooms = []
             available_rooms_price = []
         ctx = {'hotel': hotel, 'available_rooms': available_rooms, 'available_rooms_price': available_rooms_price,
-               'arrival': arrival, 'departure': departure, 'guests': guests}
+               'arrival': arrival, 'departure': departure, 'guests': guests, 'reviews': reviews,
+               'reviews_avg': reviews_avg}
         return render(request, 'ota_app/hotel.html',ctx )
 
 
@@ -124,16 +130,20 @@ class HotelDashboardView(LoginRequiredMixin, View):
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
         hotel_owner_username = hotel.hotel_owner.user.username
+
         # check if property belongs to logged in user:
         if hotel_owner_username != request.user.username:
             raise Exception('this property does not belong to you')
         # paginate reservations:
         reservations = Reservation.objects.filter(hotel=hotel)
         paginator = Paginator(reservations, 5)  # Show reservations per page.
-
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
+        # get recent reviews:
+        date_recent = datetime.date.today()
+        date_recent = date_recent - datetime.timedelta(days=30)
+        reviews = Review.objects.filter(hotel_id=hid, created__gt=date_recent).order_by('created')
         # calculate average prices:
         total_average = 0
         date_today = datetime.date.today()
@@ -142,7 +152,7 @@ class HotelDashboardView(LoginRequiredMixin, View):
         date_end = date_end.strftime("%Y-%m-%d")
         # average price not working:
         total_average = Price.objects.filter(rateplan_id__room_id__hotel_id=hid, date__range=[date_today, date_end]).aggregate(Avg('price_1'))
-        ctx = {'hotel': hotel, 'reservations': reservations, 'total_average': total_average, 'page_obj': page_obj}
+        ctx = {'hotel': hotel, 'reservations': reservations, 'total_average': total_average, 'page_obj': page_obj, 'reviews': reviews}
         return render(request, 'ota_app/dahsboard.html', ctx)
 
 
@@ -458,7 +468,6 @@ class MyHotelsView(View):
         ctx = {'hotels_owned': hotels_owned}
         return render(request, 'ota_app/my_hotels.html', ctx)
 
-
 class ReservationDetailsView(PermissionRequiredMixin, View):
     permission_required = 'ota_app.view_reservation'
 
@@ -478,3 +487,34 @@ class ReservationDetailsView(PermissionRequiredMixin, View):
         reservation_obj.status = 'CLX'
         reservation_obj.save()
         return redirect('profile')
+
+class CreateReviewView(View):
+
+    def get(self, request, hid):
+        form = AddReviewForm
+        ctx = {'form': form}
+        return render(request, 'ota_app/review_form.html', ctx)
+
+    def post(self, request, hid):
+        form = AddReviewForm(request.POST)
+        hotel = Hotel.objects.get(id=hid)
+        guest = request.user
+        if form.is_valid():
+            review = Review(
+                hotel=hotel,
+                guest=guest,
+                title=form.cleaned_data['title'],
+                text=form.cleaned_data['text'],
+                score_overall=form.cleaned_data['score_overall'],
+                score_location=form.cleaned_data['score_location'],
+                score_cleaning=form.cleaned_data['score_cleaning'],
+                score_service=form.cleaned_data['score_service']
+            )
+            review.save()
+            return redirect('main')
+
+class ReviewView(View):
+    def get(self, request, revid):
+        review = Review.objects.get(id=revid)
+        ctx = {'review': review}
+        return render(request, 'review_details.html', ctx)

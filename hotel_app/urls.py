@@ -18,7 +18,7 @@ from django.urls import path
 from ota_app.views import HotelCreateView, RoomCreateView, RateplanCreateView, MainView, PriceCreateView, \
     HotelDashboardView, RateplanUpdateView, RoomUpdateView, HotelUpdateView, RoomDeleteView, RateplanDeleteView, \
     PriceUpdateView, CreateUserView, LoginView, LogoutView, RoomDetailsView, HotelDetailsView, RoomReserveView, \
-    ConfirmReservationView, ProfileView, MyHotelsView, ReservationDetailsView
+    ConfirmReservationView, ProfileView, MyHotelsView, ReservationDetailsView, CreateReviewView, ReviewView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -48,4 +48,6 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile'),
     path('my-hotels/', MyHotelsView.as_view(), name='my_hotels'),
     path('reservation-details/<int:resid>/', ReservationDetailsView.as_view(), name='reservation_details'),
+    path('add-review/<int:hid>/', CreateReviewView.as_view(), name='create_review'),
+    path('review-details/<int:revid>/', ReviewView.as_view(), name='review_details'),
 ]

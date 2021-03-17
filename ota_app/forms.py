@@ -2,13 +2,21 @@ import django.forms as forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email, URLValidator
-from ota_app.models import Hotel
+from ota_app.models import Hotel, Review
 import datetime
+
+
+class AddReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['title', 'text', 'score_overall','score_location','score_cleaning','score_service']
 
 
 def hotel_name_unique(name):
     if Hotel.objects.filter(name=name):
         raise ValidationError('hotel with this email already exists')
+
+
 
 class AddHotelForm(forms.Form):
     name = forms.CharField(max_length=64,validators=[hotel_name_unique])
