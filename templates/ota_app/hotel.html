@@ -55,9 +55,27 @@
         </div>
         <hr>
         <div class="row">
-            <br><div class="img-thumbnail bg-light">
-            <strong>Most popular amenities:</strong>
-        </div>
+            <div class="col-6">
+                <div class="img-thumbnail bg-light">
+                    <h5>Most popular amenities:</h5>
+                    <ul>
+                    {% for facility in hotel.facilities %}
+                       <li>{{ facility }}</li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="img-thumbnail bg-light">
+                    <h5>Reviews:</h5><br> <!-- display only if more than 5 reviews -->
+                    {% for review in reviews|slice:":5" %}
+                        <a href="{% url 'review_details' review.id %}"> {{ review.title }} - {{ review.score_overall }} - {{ review.guest }}</a>
+                    {% empty %}
+                        <p>No reviews yet!</p>
+                    {% endfor %}
+                    <br>
+                </div>
+            </div>
         <div>
             <br><p class="text-justify"><strong>{{hotel.summary}}</strong></p>
             <p>{{hotel.description}}</p>
@@ -72,15 +90,7 @@
             <hr>
         </div>
         {% endif %}
-        <div>
-            <h5>Reviews:</h5><br> <!-- display only if more than 5 reviews -->
-            {% for review in reviews|slice:":5" %}
-                <a href="{% url 'review_details' review.id %}"> {{ review.title }} - {{ review.score_overall }} - {{ review.guest }}</a>
-            {% empty %}
-                <p>No reviews yet!</p>
-            {% endfor %}
-            <br>
-        </div>
+
     </div>
     <hr>
     <div>

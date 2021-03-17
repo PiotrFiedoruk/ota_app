@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMix
 from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views import View
 import datetime
 from django.views.generic.edit import UpdateView, DeleteView, FormView
@@ -39,7 +39,6 @@ class HotelDetailsView(View):
         # get reviews querysets
         reviews = Review.objects.filter(hotel_id=hid)
         reviews_avg = reviews.aggregate(Avg('score_overall'))
-        reviews_tot = len(reviews)
 
         #display available rooms if dates are known. Get list of available rooms and rooms with no availability
         # on any given date. Then compare both querysets using 'difference'. Check for easier way!
@@ -188,9 +187,11 @@ class HotelCreateView(LoginRequiredMixin, FormView):
 class HotelUpdateView(PermissionRequiredMixin, UpdateView):
     permission_required = ('ota_app.view_hotel', 'ota_app.add_hotel',)
     model = Hotel
-    fields = ('name',)
+    fields = ('name', 'city', 'description', 'facilities')
     template_name_suffix = '_update_form'
 
+    def get_success_url(self):
+        return reverse('main')
 
 #f
 class RoomCreateView(PermissionRequiredMixin, View):

@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from multiselectfield import MultiSelectField
 
 # Create your models here.
 
@@ -8,13 +9,26 @@ class Hotel_owner(models.Model):
 
 
 class Hotel(models.Model):
-    FACILITIES = (('Act', 'Active'), ('CLX', 'Cancelled'))
+    FACILITIES = (("concierge-bell", "Concierge"),
+                  ("utensils", "Restaurant" ),
+                  ("swimming-pool", "Pool"),
+                  ("umbrella-beach", "Beach"),
+                  ("shuttle-van", "Shuttle"),
+                  ("skiing", "Skiing"),
+                  ("wheelchair", "Disabled faclities"),
+                  ("wifi", "Wifi"),
+                  ("tv", "TV"),
+                  ("cocktail", "Bar"),
+                  ("snowflake", "Air Conditioning"),
+                  ("parking", "Parking"),
+                  ("smoking-ban", "No smoking"),
+                  ("dumbbell", "Gym"))
     hotel_owner = models.ForeignKey(Hotel_owner, on_delete=models.CASCADE, related_name='hotels_owned')
     name = models.CharField(max_length=64)
     city = models.CharField(max_length=64)
     street = models.CharField(max_length=128)
     description = models.TextField(max_length=1200)
-    facilities = models.Choices()
+    facilities = MultiSelectField(choices=FACILITIES)
     def __str__(self):
         return self.name
 
