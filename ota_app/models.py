@@ -8,21 +8,23 @@ class Hotel_owner(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
 
+FACILITIES = (("concierge-bell", "Concierge"),
+              ("utensils", "Restaurant" ),
+              ("swimming-pool", "Pool"),
+              ("umbrella-beach", "Beach"),
+              ("shuttle-van", "Shuttle"),
+              ("skiing", "Skiing"),
+              ("wheelchair", "Disabled facilities"),
+              ("wifi", "Wifi"),
+              ("tv", "TV"),
+              ("cocktail", "Bar"),
+              ("snowflake", "Air Conditioning"),
+              ("parking", "Parking"),
+              ("smoking-ban", "No smoking"),
+              ("dumbbell", "Gym"))
+
+
 class Hotel(models.Model):
-    FACILITIES = (("concierge-bell", "Concierge"),
-                  ("utensils", "Restaurant" ),
-                  ("swimming-pool", "Pool"),
-                  ("umbrella-beach", "Beach"),
-                  ("shuttle-van", "Shuttle"),
-                  ("skiing", "Skiing"),
-                  ("wheelchair", "Disabled faclities"),
-                  ("wifi", "Wifi"),
-                  ("tv", "TV"),
-                  ("cocktail", "Bar"),
-                  ("snowflake", "Air Conditioning"),
-                  ("parking", "Parking"),
-                  ("smoking-ban", "No smoking"),
-                  ("dumbbell", "Gym"))
     hotel_owner = models.ForeignKey(Hotel_owner, on_delete=models.CASCADE, related_name='hotels_owned')
     name = models.CharField(max_length=64)
     city = models.CharField(max_length=64)

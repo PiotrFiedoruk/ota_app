@@ -3,14 +3,14 @@ from django.contrib.auth.mixins import PermissionRequiredMixin, LoginRequiredMix
 from django.core.paginator import Paginator
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy
 from django.views import View
 import datetime
-from django.views.generic.edit import UpdateView, DeleteView, FormView
+from django.views.generic.edit import UpdateView, DeleteView, FormView, CreateView
 from django.db.models import Avg, Sum, Min
-from ota_app.forms import AddUserForm, LoginForm, AddHotelForm, AddRoomForm, AddRateplanForm, AddReviewForm
+from ota_app.forms import AddUserForm, LoginForm, AddRateplanForm, AddReviewForm
 from ota_app.models import Hotel, Room, Rateplan, Price, Reservation, Hotel_owner, Review
-from django.contrib.auth.models import Group, User, Permission
+from django.contrib.auth.models import Group, User
 
 
 # no post
@@ -90,7 +90,7 @@ class RoomReserveView(View):
 
 
 
-class ConfirmReservationView(View):
+class ConfirmReservationView(LoginRequiredMixin, View):
     def post(self, request):
         # get post data:
         rpid = request.POST.get('rpid')
@@ -124,13 +124,13 @@ class ConfirmReservationView(View):
 
 
 # no post
-class HotelDashboardView(LoginRequiredMixin, View):
-
+class HotelDashboardView(PermissionRequiredMixin, View):
+    permission_required = ('ota_app.view_hotel')
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
         hotel_owner_username = hotel.hotel_owner.user.username
 
-        # check if property belongs to logged in user:
+        # # check if property belongs to logged in user:
         if hotel_owner_username != request.user.username:
             raise Exception('this property does not belong to you')
         # paginate reservations:
@@ -156,24 +156,31 @@ class HotelDashboardView(LoginRequiredMixin, View):
 
 
 # f
-class HotelCreateView(LoginRequiredMixin, FormView):
-    permission_required = ('ota_app.view_hotel', 'ota_app.add_hotel',)
-    template_name = 'ota_app/hotel_form.html'
-    form_class = AddHotelForm
-    success_url = '/'
-    login_url = 'login'
+class HotelCreateView(PermissionRequiredMixin, CreateView):
+    permission_required = ('ota_app.add_hotel')
+    model = Hotel
+    fields = ['name', 'city', 'street', 'description', 'facilities']
+    exclude = ['hotel_owner']
+
+
+    def get_success_url(self):
+        hid = self.kwargs['hid']
+        return f'/dashboard/{hid}'
 
     def form_valid(self, form):
-
         hotel = Hotel(
             name=form.cleaned_data['name'],
             city=form.cleaned_data['city'],
+            street=form.cleaned_data['street'],
+            description=form.cleaned_data['description'],
+            facilities=form.cleaned_data['facilities'],
         )
+
         # assign to user hotel_owner_group permission
         user = self.request.user
         hotel_owner_group = Group.objects.get(name='hotel_owner_group')
         hotel_owner_group.user_set.add(user)
-        # assign hotel_owner to hotel:
+        # assign hotel_owner to new hotel
         try:
             hotel_owner = Hotel_owner.objects.get(user=user)
         except:
@@ -191,26 +198,26 @@ class HotelUpdateView(PermissionRequiredMixin, UpdateView):
     template_name_suffix = '_update_form'
 
     def get_success_url(self):
-        return reverse('main')
+        hid = self.kwargs['pk']
+        return f"/dashboard/{hid}"
 
 #f
-class RoomCreateView(PermissionRequiredMixin, View):
+class RoomCreateView(PermissionRequiredMixin, CreateView):
     permission_required = ('ota_app.view_room', 'ota_app.add_room',)
+    model = Room
+    fields = ['name']
 
-    def get(self, request, hid):
-        form = AddRoomForm
-        ctx = {'form': form}
-        return render(request, 'ota_app/room_form.html', ctx)
+    def get_success_url(self):
+        hid = self.kwargs['hid']
+        return f"dashboard/{hid}"
 
-    def post(self, request, hid):
-        form = AddRoomForm(request.POST)
-        if form.is_valid():
-            hotel = Hotel.objects.get(id=hid)
-            name = form.cleaned_data['name']
-            room = Room.objects.create(hotel_id=hotel, name=name)
-            room.save()
+    def form_valid(self, form):
+        hid = self.kwargs['hid']
+        hotel = Hotel.objects.get(id=hid)
+        name = form.cleaned_data['name']
+        room = Room(hotel_id=hotel, name=name)
+        room.save()
         return redirect('dashboard', hid)
-
 
 class RoomUpdateView(PermissionRequiredMixin, UpdateView):
     permission_required = ('ota_app.view_room', 'ota_app.add_room',)
@@ -221,8 +228,8 @@ class RoomUpdateView(PermissionRequiredMixin, UpdateView):
     # define success url:
     def get_success_url(self):
         room = self.object
-        hotel_id = room.hotel_id_id
-        return reverse_lazy('dashboard', kwargs = {'hid': hotel_id})
+        hid = room.hotel_id_id
+        return f'/dashboard/{hid}'
 
 
 class RoomDeleteView(PermissionRequiredMixin, DeleteView):
@@ -247,6 +254,8 @@ class RoomDetailsView(View):
 
 class RateplanCreateView(PermissionRequiredMixin, View):
     permission_required = ('ota_app.view_rateplan', 'ota_app.add_rateplan',)
+    model = Rateplan
+    fields = ['name']
 
     def get(self, request, hid, rid):
         form = AddRateplanForm()
@@ -298,45 +307,49 @@ class PriceCreateView(PermissionRequiredMixin, View): #price calendar
 
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
-        # define start and end date for price list. if start date not provided in url, set it to today's date
-        if 'date' in request.GET:
-            start_date = request.GET.get('date')
-            start_date = datetime.datetime.strptime(start_date,'%Y-%m-%d').date()  # convert string date to datetime object so it can be used in timedlta
-            if start_date < datetime.date.today(): # changing past prices not allowed
-                start_date = datetime.date.today()
+        # # check if property belongs to logged in user:
+        if hotel.hotel_owner.user.username != request.user.username:
+            raise Exception('this property does not belong to you')
         else:
-            start_date = datetime.date.today()
-        end_date = start_date + datetime.timedelta(days=14)  # set number of calendar days here
-        prev_date = start_date - datetime.timedelta(days=14)  # get previous date for navigation links
-        if prev_date < datetime.date.today(): # changing past prices not allowed
-            prev_date = datetime.date.today()
-        # create price form:
-        form = ""
-        for room in hotel.hotel_rooms.all():
-            form = form + f"<p><h3>{room.name}</h3></p>"
-            loop = 1
-            for rateplan in room.room_rateplans.all():
-                form = form + f"<p><strong>{rateplan.name}</strong></p>"
-                form = form + f"<table class='table' style='table-layout: fixed'><tr>"
-                # form = form + f"<td witdh='30'><input type='text' disabled value='{rateplan.name}'>" \
-                #               "<input type='text' disabled value='price 1'>" \
-                #               "<input type='text' disabled value='price 2'></td>"
-                for price in rateplan.rateplan_prices.filter(date__gte=start_date, date__lte=end_date):
-                    form = form + "<td>"
-                    if loop == 1:
-                        form = form + f"{price.date.strftime('%a %d %b')}<br>"
-                        form = form + f"<input type='hidden' value='{price.date}' name='dt-{price.id}'><br>"
-                        form = form + f"<input type='number' value='{price.availability}' name='av-{price.id}'><br>"
-                        # form = form + f"<p></p>"
-                    form = form + f"<p></p>"
-                    form = form + f"<input type='number' value='{price.price_1}' name='pr1-{price.id}'><br>"
-                    form = form + f"<input type='number' value='{price.price_2}' name='pr2-{price.id}'><br>"
-                    form = form + "</td>"
-                form = form + "</tr></table>"
-                loop += 1
+            # define start and end date for price list. if start date not provided in url, set it to today's date
+            if 'date' in request.GET:
+                start_date = request.GET.get('date')
+                start_date = datetime.datetime.strptime(start_date,'%Y-%m-%d').date()  # convert string date to datetime object so it can be used in timedlta
+                if start_date < datetime.date.today(): # changing past prices not allowed
+                    start_date = datetime.date.today()
+            else:
+                start_date = datetime.date.today()
+            end_date = start_date + datetime.timedelta(days=14)  # set number of calendar days here
+            prev_date = start_date - datetime.timedelta(days=14)  # get previous date for navigation links
+            if prev_date < datetime.date.today(): # changing past prices not allowed
+                prev_date = datetime.date.today()
+            # create price form:
+            form = ""
+            for room in hotel.hotel_rooms.all():
+                form = form + f"<p><h3>{room.name}</h3></p>"
+                loop = 1
+                for rateplan in room.room_rateplans.all():
+                    form = form + f"<p><strong>{rateplan.name}</strong></p>"
+                    form = form + f"<table class='table' style='table-layout: fixed'><tr>"
+                    # form = form + f"<td witdh='30'><input type='text' disabled value='{rateplan.name}'>" \
+                    #               "<input type='text' disabled value='price 1'>" \
+                    #               "<input type='text' disabled value='price 2'></td>"
+                    for price in rateplan.rateplan_prices.filter(date__gte=start_date, date__lte=end_date):
+                        form = form + "<td>"
+                        if loop == 1:
+                            form = form + f"{price.date.strftime('%a %d %b')}<br>"
+                            form = form + f"<input type='hidden' value='{price.date}' name='dt-{price.id}'><br>"
+                            form = form + f"<input type='number' value='{price.availability}' name='av-{price.id}'><br>"
+                            # form = form + f"<p></p>"
+                        form = form + f"<p></p>"
+                        form = form + f"<input type='number' value='{price.price_1}' name='pr1-{price.id}'><br>"
+                        form = form + f"<input type='number' value='{price.price_2}' name='pr2-{price.id}'><br>"
+                        form = form + "</td>"
+                    form = form + "</tr></table>"
+                    loop += 1
 
-        ctx = {'hotel': hotel, 'start_date': start_date, 'end_date': end_date, 'prev_date': prev_date, 'form': form}
-        return render(request, 'ota_app/add_price.html', ctx)
+            ctx = {'hotel': hotel, 'start_date': start_date, 'end_date': end_date, 'prev_date': prev_date, 'form': form}
+            return render(request, 'ota_app/add_price.html', ctx)
 
     def post(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
@@ -379,9 +392,13 @@ class PriceUpdateView(PermissionRequiredMixin, View): #batch update
     permission_required = ('ota_app.view_price', 'ota_app.add_price', 'ota_app.change_price')
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
-        rateplans = Rateplan.objects.filter(room_id__hotel_id_id=hid)
-        ctx = {'rateplans': rateplans, 'hotel': hotel}
-        return render(request, 'ota_app/price_update_form.html', ctx)
+        # # check if property belongs to logged in user:
+        if hotel.hotel_owner.user.username != request.user.username:
+            raise Exception('this property does not belong to you')
+        else:
+            rateplans = Rateplan.objects.filter(room_id__hotel_id_id=hid)
+            ctx = {'rateplans': rateplans, 'hotel': hotel}
+            return render(request, 'ota_app/price_update_form.html', ctx)
 
     def post(self, request, hid):
         rateplan_id = request.POST.get('rateplan_id')
@@ -423,6 +440,9 @@ class CreateUserView(FormView):
             email=form.cleaned_data['email']
         )
         user.save()
+        # assign to user guest_group permission
+        guest_group = Group.objects.get(name='guest_group')
+        guest_group.user_set.add(user)
         return super().form_valid(form)
 
 class LoginView(View):
@@ -444,14 +464,15 @@ class LoginView(View):
                 return render(request, "ota_app/login.html", {"form":form, 'err': err})
         else:
             err = 'something went wrong'
-            return render(request, "ota_app/login.html", {"form":form, 'err': err})
+            return render(request, "ota_app/main.html", {"form":form, 'err': err})
 
-class LogoutView(View):
+class LogoutView(LoginRequiredMixin, View):
     def get(self, request):
         logout(request)
         return redirect('main')
 
-class ProfileView(View):
+class ProfileView(PermissionRequiredMixin, View):
+    permission_required = ('ota_app.view_reservation')
     # def test_func(self, hid):
     #     return len(self.user.request.hotel_owner.hotels_owned.filter(id=hid)) > 0
     def get(self, request):
@@ -461,7 +482,9 @@ class ProfileView(View):
         ctx = {'reservations': reservations}
         return render(request, 'ota_app/profile_view.html', ctx)
 
-class MyHotelsView(View):
+class MyHotelsView(PermissionRequiredMixin, View):
+    permission_required = ('ota_app.view_hotel')
+
     def get(self, request):
         user = request.user
         # get list of owned hotels:
@@ -489,7 +512,8 @@ class ReservationDetailsView(PermissionRequiredMixin, View):
         reservation_obj.save()
         return redirect('profile')
 
-class CreateReviewView(View):
+class CreateReviewView(PermissionRequiredMixin, View):
+    permission_required = 'ota_app.view_reservation'
 
     def get(self, request, hid):
         form = AddReviewForm
