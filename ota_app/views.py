@@ -21,7 +21,7 @@ class MainView(View):
             arrival = request.GET.get('arrival')
             departure = request.GET.get('departure')
             guests = request.GET.get('guests')
-            # below search returns all hotels with availablity on ANY given date between arrival-departure.
+            # below search returns all hotels with availability on ANY given date between arrival-departure.
             hotelsearch = Hotel.objects.filter(
                 city=city, hotel_rooms__room_rateplans__rateplan_prices__date__range=[arrival, departure],
                 hotel_rooms__room_rateplans__rateplan_prices__availability__gt=0).distinct()
@@ -36,12 +36,12 @@ class MainView(View):
 class HotelDetailsView(View):
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
-        # get reviews querysets
+        # get reviews queryset
         reviews = Review.objects.filter(hotel_id=hid)
         reviews_avg = reviews.aggregate(Avg('score_overall'))
 
-        #display available rooms if dates are known. Get list of available rooms and rooms with no availability
-        # on any given date. Then compare both querysets using 'difference'. Check for easier way!
+        # display available rooms if dates are known. Get list of available rooms and rooms with no availability
+        # on any given date. Then compare both queryset using 'difference'. Check for easier way!
         if 'arrival' in request.GET:
             arrival = request.GET.get('arrival')
             departure = request.GET.get('departure')
@@ -56,20 +56,21 @@ class HotelDetailsView(View):
             available_rooms = hotel_rooms.difference(not_available_rooms)
 
             # count the average room price for each room:
-
-            # cannot call annotate after using difference on queryset:
-            # available_rooms_price = available_rooms.annotate(avg_price=Min('room_rateplans__rateplan_prices__price_1'))
+            # cannot call annotate after using difference on queryset: available_rooms_price =
+            # available_rooms.annotate(avg_price=Min('room_rateplans__rateplan_prices__price_1'))
             available_rooms_price = hotel.hotel_rooms.filter(
-            room_rateplans__rateplan_prices__date__range=[arrival, departure],
-            room_rateplans__rateplan_prices__availability__gt=0, ).distinct()\
+                room_rateplans__rateplan_prices__date__range=[arrival, departure],
+                room_rateplans__rateplan_prices__availability__gt=0, ).distinct() \
                 .annotate(avg_price=Min('room_rateplans__rateplan_prices__price_1'))
+            ctx = {'hotel': hotel, 'available_rooms': available_rooms, 'available_rooms_price': available_rooms_price,
+                   'arrival': arrival, 'departure': departure, 'guests': guests, 'reviews': reviews,
+                   'reviews_avg': reviews_avg}
         else:
             available_rooms = []
             available_rooms_price = []
-        ctx = {'hotel': hotel, 'available_rooms': available_rooms, 'available_rooms_price': available_rooms_price,
-               'arrival': arrival, 'departure': departure, 'guests': guests, 'reviews': reviews,
-               'reviews_avg': reviews_avg}
-        return render(request, 'ota_app/hotel.html',ctx )
+            ctx = {'hotel': hotel, 'available_rooms': available_rooms, 'available_rooms_price': available_rooms_price,
+                   'reviews': reviews, 'reviews_avg': reviews_avg}
+        return render(request, 'ota_app/hotel.html', ctx)
 
 
 # no post
@@ -81,13 +82,14 @@ class RoomReserveView(View):
             departure = request.GET.get('departure')
             guests = request.GET.get('guests')
             available_rateplans = Rateplan.objects.filter(room_id=rid, rateplan_prices__date__gte=arrival,
-                                                      rateplan_prices__date__lt=departure,
-                                                      rateplan_prices__availability__gt=0,
-                                                      ).annotate(total_price=Sum('rateplan_prices__price_1'))
+                                                          rateplan_prices__date__lt=departure,
+                                                          rateplan_prices__availability__gt=0,
+                                                          ).annotate(total_price=Sum('rateplan_prices__price_1'))
             ctx = {'room': room, 'available_rateplans': available_rateplans, 'arrival': arrival, 'departure': departure,
                    'guests': guests}
+        else:
+            ctx = {'room': room}
         return render(request, 'ota_app/room_reserve.html', ctx)
-
 
 
 class ConfirmReservationView(LoginRequiredMixin, View):
@@ -102,13 +104,14 @@ class ConfirmReservationView(LoginRequiredMixin, View):
         hotel_obj = Hotel.objects.get(hotel_rooms__room_rateplans__in=[rpid])
         guest_id = request.user.id
         guest_obj = User.objects.get(id=guest_id)
-        rateplan_obj=Rateplan.objects.get(id=rpid)
+        rateplan_obj = Rateplan.objects.get(id=rpid)
         room = Room.objects.get(room_rateplans__in=[rpid])
         rateplan = Rateplan.objects.get(id=rpid)
         # save new reservation:
         new_reservation = Reservation.objects.create(hotel=hotel_obj, guest=guest_obj,
-                                                     price=int(float(total_price)), room=room, arrival=arrival, departure=departure,
-                                                     num_of_guests=int(guests))
+                                                     price=int(float(total_price)), room=room, arrival=arrival,
+                                                     departure=departure,
+                                                     num_of_guests=int(guests), status='active')
         new_reservation.save()
         # assign new reservation to a rateplan
         new_reservation.rateplan.add(rateplan_obj)
@@ -116,25 +119,26 @@ class ConfirmReservationView(LoginRequiredMixin, View):
         availability_set = Price.objects.filter(rateplan_id__room_id=room, date__range=[arrival, departure])
         for price in availability_set:
             price_availability = price.availability
-            price.availability = price_availability -1
+            price.availability = price_availability - 1
             price.save()
         ctx = {'hotel': hotel_obj, 'room': room, 'rateplan': rateplan, 'guests': guests, 'arrival': arrival,
-               'departure': departure, 'total_price':total_price}
+               'departure': departure, 'total_price': total_price}
         return render(request, 'ota_app/confirm_reservation.html', ctx)
 
 
 # no post
 class HotelDashboardView(PermissionRequiredMixin, View):
-    permission_required = ('ota_app.view_hotel')
+    permission_required = 'ota_app.view_hotel'
+
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
         hotel_owner_username = hotel.hotel_owner.user.username
 
         # # check if property belongs to logged in user:
-        if hotel_owner_username != request.user.username:
-            raise Exception('this property does not belong to you')
+        # if hotel_owner_username != request.user.username:
+        #     raise Exception('this property does not belong to you')
         # paginate reservations:
-        reservations = Reservation.objects.filter(hotel=hotel)
+        reservations = Reservation.objects.filter(hotel=hotel).order_by('-created')
         paginator = Paginator(reservations, 5)  # Show reservations per page.
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -142,16 +146,16 @@ class HotelDashboardView(PermissionRequiredMixin, View):
         # get recent reviews:
         date_recent = datetime.date.today()
         date_recent = date_recent - datetime.timedelta(days=30)
-        reviews = Review.objects.filter(hotel_id=hid, created__gt=date_recent).order_by('created')
+        reviews = Review.objects.filter(hotel_id=hid, created__gt=date_recent).order_by('-created')
         # calculate average prices:
-        total_average = 0
         date_today = datetime.date.today()
         date_end = date_today + datetime.timedelta(days=30)
         date_today = datetime.date.today().strftime("%Y-%m-%d")
         date_end = date_end.strftime("%Y-%m-%d")
-        # average price not working:
-        total_average = Price.objects.filter(rateplan_id__room_id__hotel_id=hid, date__range=[date_today, date_end]).aggregate(Avg('price_1'))
-        ctx = {'hotel': hotel, 'reservations': reservations, 'total_average': total_average, 'page_obj': page_obj, 'reviews': reviews}
+        total_average = Price.objects.filter(rateplan_id__room_id__hotel_id=hid,
+                                             date__range=[date_today, date_end]).aggregate(Avg('price_1'))
+        ctx = {'hotel': hotel, 'reservations': reservations, 'total_average': total_average, 'page_obj': page_obj,
+               'reviews': reviews}
         return render(request, 'ota_app/dahsboard.html', ctx)
 
 
@@ -161,7 +165,6 @@ class HotelCreateView(PermissionRequiredMixin, CreateView):
     model = Hotel
     fields = ['name', 'city', 'street', 'description', 'facilities']
     exclude = ['hotel_owner']
-
 
     def get_success_url(self):
         hid = self.kwargs['hid']
@@ -183,7 +186,7 @@ class HotelCreateView(PermissionRequiredMixin, CreateView):
         # assign hotel_owner to new hotel
         try:
             hotel_owner = Hotel_owner.objects.get(user=user)
-        except:
+        finally:
             hotel_owner = Hotel_owner.objects.create(user=user)
         hotel.hotel_owner = hotel_owner
         # save hotel:
@@ -201,7 +204,8 @@ class HotelUpdateView(PermissionRequiredMixin, UpdateView):
         hid = self.kwargs['pk']
         return f"/dashboard/{hid}"
 
-#f
+
+# f
 class RoomCreateView(PermissionRequiredMixin, CreateView):
     permission_required = ('ota_app.view_room', 'ota_app.add_room',)
     model = Room
@@ -219,6 +223,7 @@ class RoomCreateView(PermissionRequiredMixin, CreateView):
         room.save()
         return redirect('dashboard', hid)
 
+
 class RoomUpdateView(PermissionRequiredMixin, UpdateView):
     permission_required = ('ota_app.view_room', 'ota_app.add_room',)
     model = Room
@@ -235,6 +240,7 @@ class RoomUpdateView(PermissionRequiredMixin, UpdateView):
 class RoomDeleteView(PermissionRequiredMixin, DeleteView):
     permission_required = ('ota_app.view_hotel', 'ota_app.delete_room')
     model = Room
+
     # define success url:
 
     def get_success_url(self):
@@ -273,7 +279,7 @@ class RateplanCreateView(PermissionRequiredMixin, View):
             new_rateplan.save()
             # create list of dates
             date_today = datetime.date.today()
-            datelist = [date_today + datetime.timedelta(days=x) for x in range(365)] # number of initial dates here
+            datelist = [date_today + datetime.timedelta(days=x) for x in range(365)]  # number of initial dates here
             # create default prices for new rateplan for the next 365 days:
             for date in datelist:
                 Price.objects.create(rateplan_id=new_rateplan, date=date, price_1=price_1,
@@ -286,6 +292,7 @@ class RateplanUpdateView(PermissionRequiredMixin, UpdateView):
     model = Rateplan
     fields = ['name']
     template_name_suffix = '_update_form'
+
     def get_success_url(self):
         rateplan = self.object
         hotel_id = rateplan.room_id.hotel_id_id
@@ -302,7 +309,7 @@ class RateplanDeleteView(PermissionRequiredMixin, DeleteView):
         return reverse_lazy('dashboard', kwargs={'hid': hotel_id})
 
 
-class PriceCreateView(PermissionRequiredMixin, View): #price calendar
+class PriceCreateView(PermissionRequiredMixin, View):  # price calendar
     permission_required = ('ota_app.view_price', 'ota_app.add_price', 'ota_app.change_price')
 
     def get(self, request, hid):
@@ -314,14 +321,15 @@ class PriceCreateView(PermissionRequiredMixin, View): #price calendar
             # define start and end date for price list. if start date not provided in url, set it to today's date
             if 'date' in request.GET:
                 start_date = request.GET.get('date')
-                start_date = datetime.datetime.strptime(start_date,'%Y-%m-%d').date()  # convert string date to datetime object so it can be used in timedlta
-                if start_date < datetime.date.today(): # changing past prices not allowed
+                start_date = datetime.datetime.strptime(start_date,
+                                                        '%Y-%m-%d').date()
+                if start_date < datetime.date.today():  # changing past prices not allowed
                     start_date = datetime.date.today()
             else:
                 start_date = datetime.date.today()
             end_date = start_date + datetime.timedelta(days=14)  # set number of calendar days here
             prev_date = start_date - datetime.timedelta(days=14)  # get previous date for navigation links
-            if prev_date < datetime.date.today(): # changing past prices not allowed
+            if prev_date < datetime.date.today():  # changing past prices not allowed
                 prev_date = datetime.date.today()
             # create price form:
             form = ""
@@ -331,7 +339,7 @@ class PriceCreateView(PermissionRequiredMixin, View): #price calendar
                 for rateplan in room.room_rateplans.all():
                     form = form + f"<p><strong>{rateplan.name}</strong></p>"
                     form = form + f"<table class='table' style='table-layout: fixed'><tr>"
-                    # form = form + f"<td witdh='30'><input type='text' disabled value='{rateplan.name}'>" \
+                    # form = form + f"<td><input type='text' disabled value='{rateplan.name}'>" \
                     #               "<input type='text' disabled value='price 1'>" \
                     #               "<input type='text' disabled value='price 2'></td>"
                     for price in rateplan.rateplan_prices.filter(date__gte=start_date, date__lte=end_date):
@@ -356,7 +364,7 @@ class PriceCreateView(PermissionRequiredMixin, View): #price calendar
         if 'date' in request.GET:
             start_date = request.GET.get('date')
             start_date = datetime.datetime.strptime(start_date,
-                                                    '%Y-%m-%d').date()  # convert string date to datetime object so it can be used in timedlta
+                                                    '%Y-%m-%d').date()
         else:
             start_date = datetime.datetime.today().date()
         end_date = start_date + datetime.timedelta(days=14)  # set number of calendar days here
@@ -368,8 +376,6 @@ class PriceCreateView(PermissionRequiredMixin, View): #price calendar
                 for price in rateplan.rateplan_prices.filter(date__gte=start_date, date__lte=end_date):
                     rateplan_id = rateplan.id
                     date = price.date.strftime('%Y-%m-%d')
-                    post_date = request.POST.get(f"dt-{price.id}")
-
                     price_1 = request.POST.get(f"pr1-{price.id}")
                     price_2 = request.POST.get(f"pr2-{price.id}")
                     if loop == 1:
@@ -388,8 +394,10 @@ class PriceCreateView(PermissionRequiredMixin, View): #price calendar
                 loop += 1
         return redirect('create_price', hid)
 
-class PriceUpdateView(PermissionRequiredMixin, View): #batch update
+
+class PriceUpdateView(PermissionRequiredMixin, View):  # batch update
     permission_required = ('ota_app.view_price', 'ota_app.add_price', 'ota_app.change_price')
+
     def get(self, request, hid):
         hotel = Hotel.objects.get(id=hid)
         # # check if property belongs to logged in user:
@@ -417,7 +425,7 @@ class PriceUpdateView(PermissionRequiredMixin, View): #batch update
             # update availability for all rateplans:
             if availability != "":
                 Price.objects.filter(rateplan_id__room_id=room.id).filter(date=date).update(
-                        availability=availability)
+                    availability=availability)
             # # update prices for chosen rateplan
             price = Price.objects.filter(rateplan_id=rateplan_id).filter(date=date)
             if price_1 != "":
@@ -425,7 +433,9 @@ class PriceUpdateView(PermissionRequiredMixin, View): #batch update
             if price_2 != "":
                 price.update(price_2=price_2)
         return redirect('create_price', hid)
-#f
+
+
+# f
 class CreateUserView(FormView):
     template_name = 'ota_app/hotelowner_form.html'
     form_class = AddUserForm
@@ -445,10 +455,11 @@ class CreateUserView(FormView):
         guest_group.user_set.add(user)
         return super().form_valid(form)
 
+
 class LoginView(View):
     def get(self, request):
         form = LoginForm()
-        return render(request, "ota_app/login.html", {"form":form})
+        return render(request, "ota_app/login.html", {"form": form})
 
     def post(self, request):
         form = LoginForm(request.POST)
@@ -458,32 +469,35 @@ class LoginView(View):
             user = authenticate(username=username, password=password)
             if user:
                 login(request, user)
-                return HttpResponseRedirect(request.META.get('HTTP_REFERER','/'))
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
             else:
                 err = 'wrong username or password. try again'
-                return render(request, "ota_app/login.html", {"form":form, 'err': err})
+                return render(request, "ota_app/login.html", {"form": form, 'err': err})
         else:
             err = 'something went wrong'
-            return render(request, "ota_app/main.html", {"form":form, 'err': err})
+            return render(request, "ota_app/main.html", {"form": form, 'err': err})
+
 
 class LogoutView(LoginRequiredMixin, View):
     def get(self, request):
         logout(request)
         return redirect('main')
 
+
 class ProfileView(PermissionRequiredMixin, View):
-    permission_required = ('ota_app.view_reservation')
+    permission_required = 'ota_app.view_reservation'
     # def test_func(self, hid):
     #     return len(self.user.request.hotel_owner.hotels_owned.filter(id=hid)) > 0
     def get(self, request):
         user = request.user
         # get list of owned hotels:
-        reservations = user.guest_reservations.all().order_by('arrival', 'departure')
+        reservations = user.guest_reservations.all().order_by('-created')
         ctx = {'reservations': reservations}
         return render(request, 'ota_app/profile_view.html', ctx)
 
+
 class MyHotelsView(PermissionRequiredMixin, View):
-    permission_required = ('ota_app.view_hotel')
+    permission_required = 'ota_app.view_hotel'
 
     def get(self, request):
         user = request.user
@@ -491,6 +505,7 @@ class MyHotelsView(PermissionRequiredMixin, View):
         hotels_owned = user.hotel_owner.hotels_owned.all()
         ctx = {'hotels_owned': hotels_owned}
         return render(request, 'ota_app/my_hotels.html', ctx)
+
 
 class ReservationDetailsView(PermissionRequiredMixin, View):
     permission_required = 'ota_app.view_reservation'
@@ -511,6 +526,7 @@ class ReservationDetailsView(PermissionRequiredMixin, View):
         reservation_obj.status = 'CLX'
         reservation_obj.save()
         return redirect('profile')
+
 
 class CreateReviewView(PermissionRequiredMixin, View):
     permission_required = 'ota_app.view_reservation'
@@ -538,8 +554,18 @@ class CreateReviewView(PermissionRequiredMixin, View):
             review.save()
             return redirect('main')
 
+
 class ReviewView(View):
     def get(self, request, revid):
         review = Review.objects.get(id=revid)
         ctx = {'review': review}
         return render(request, 'review_details.html', ctx)
+
+class ReservationDetailsHotelView(PermissionRequiredMixin, View):
+    permission_required = 'ota_app.view_reservation'
+
+    def get(self, request, resid):
+        reservation = Reservation.objects.get(id=resid)
+        ctx = {'reservation': reservation}
+        return render(request, 'ota_app/reservation_details_hotel.html', ctx)
+

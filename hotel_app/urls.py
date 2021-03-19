@@ -18,14 +18,15 @@ from django.urls import path
 from ota_app.views import HotelCreateView, RoomCreateView, RateplanCreateView, MainView, PriceCreateView, \
     HotelDashboardView, RateplanUpdateView, RoomUpdateView, HotelUpdateView, RoomDeleteView, RateplanDeleteView, \
     PriceUpdateView, CreateUserView, LoginView, LogoutView, RoomDetailsView, HotelDetailsView, RoomReserveView, \
-    ConfirmReservationView, ProfileView, MyHotelsView, ReservationDetailsView, CreateReviewView, ReviewView
+    ConfirmReservationView, ProfileView, MyHotelsView, ReservationDetailsView, CreateReviewView, ReviewView, \
+    ReservationDetailsHotelView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     # guest part
     path('', MainView.as_view(), name='main'),
-    path('hotel-details/<int:hid>', HotelDetailsView.as_view(), name='hotel-details'),
+    path('hotel-details/<int:hid>/', HotelDetailsView.as_view(), name='hotel-details'),
     path('room-reserve/<int:hid>/<int:rid>/', RoomReserveView.as_view(), name='room-reserve'),
     path('confirm-reservation/', ConfirmReservationView.as_view(), name='confirm-reservation'),
 
@@ -48,6 +49,7 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile'),
     path('my-hotels/', MyHotelsView.as_view(), name='my_hotels'),
     path('reservation-details/<int:resid>/', ReservationDetailsView.as_view(), name='reservation_details'),
+    path('reservation-details-hotel/<int:resid>/', ReservationDetailsHotelView.as_view(), name='reservation_details_hotel'),
     path('add-review/<int:hid>/', CreateReviewView.as_view(), name='create_review'),
     path('review-details/<int:revid>/', ReviewView.as_view(), name='review_details'),
 ]

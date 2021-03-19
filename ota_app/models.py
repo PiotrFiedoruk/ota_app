@@ -8,20 +8,20 @@ class Hotel_owner(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
 
-FACILITIES = (("concierge-bell", "Concierge"),
-              ("utensils", "Restaurant" ),
-              ("swimming-pool", "Pool"),
-              ("umbrella-beach", "Beach"),
-              ("shuttle-van", "Shuttle"),
-              ("skiing", "Skiing"),
-              ("wheelchair", "Disabled facilities"),
-              ("wifi", "Wifi"),
-              ("tv", "TV"),
-              ("cocktail", "Bar"),
-              ("snowflake", "Air Conditioning"),
-              ("parking", "Parking"),
-              ("smoking-ban", "No smoking"),
-              ("dumbbell", "Gym"))
+FACILITIES = (("Concierge", "Concierge"),
+              ("Restaurant", "Restaurant" ),
+              ("Swimming Pool", "Swimming Pool"),
+              ("Beach", "Beach"),
+              ("Shuttle", "Shuttle"),
+              ("Skiing", "Skiing"),
+              ("Disabled facilities", "Disabled facilities"),
+              ("Wifi", "Wifi"),
+              ("TV", "TV"),
+              ("Bar", "Bar"),
+              ("Air Conditioning", "Air Conditioning"),
+              ("Parking", "Parking"),
+              ("No smoking", "No smoking"),
+              ("Gym", "Gym"))
 
 
 class Hotel(models.Model):

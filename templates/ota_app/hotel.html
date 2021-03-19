@@ -27,7 +27,7 @@
             {#  hotel header#}
             <div class="">
             {# hotel-header -  try applying class badge bg-dark instead of <kbd>#}
-                <h4><span class="h6"><sup><kbd>{{hotel.structure_type}}Hotel</kbd></sup></span> {{hotel.name}} {{hotel.star_rating}}<span class="float-end"><kbd>{{ reviews_avg.score_overall__avg }}</kbd><small></small></span></h4>
+                <h4><span class="h6"><sup><kbd>{{hotel.structure_type}}Hotel</kbd></sup></span> {{hotel.name}} {{hotel.star_rating}}<span class="float-end"><kbd>{{ reviews_avg.score_overall__avg|floatformat:1 }}</kbd><small></small></span></h4>
                 {{hotel.street}} Wysoka {{hotel.house_no}}, {{hotel.postcode}}01-234, {{hotel.city}}, {{hotel.country}}Poland<span class="float-end"><sup><small><b>{{ reviews|length }} review</b></small></sup></span>
             </div>
     <!--image gallery-->
@@ -67,9 +67,9 @@
             </div>
             <div class="col-6">
                 <div class="img-thumbnail bg-light">
-                    <h5>Reviews:</h5><br> <!-- display only if more than 5 reviews -->
+                    <h5>Reviews:</h5><!-- display only if more than 5 reviews -->
                     {% for review in reviews|slice:":5" %}
-                        <a href="{% url 'review_details' review.id %}"> {{ review.title }} - {{ review.score_overall }} - {{ review.guest }}</a>
+                        <p><kbd>{{ review.score_overall|floatformat:1  }}</kbd> <a href="{% url 'review_details' review.id %}"> {{ review.title }}</a> {{ review.guest }}</p>
                     {% empty %}
                         <p>No reviews yet!</p>
                     {% endfor %}

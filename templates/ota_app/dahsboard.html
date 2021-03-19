@@ -5,15 +5,17 @@
     <div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 ">
         <h2>{{ hotel.name }} </h2>
         <a href="{% url 'update_hotel' hotel.id %}" class="btn btn-dark">edit hotel details</a>
+        <a href="{% url 'create_price' hotel.id%}" class="btn btn-warning">edit prices</a>
         <hr>
         <div>
             <h4>Recent reservations at {{ hotel.name }}:</h4>
             <ul>
             {% for reservation in page_obj %}
             {# Each "contact" is a Contact model object. #}
-            <li>{{ reservation.rateplan.name }} | {{ reservation.guest.first_name }} {{ reservation.guest.last_name }} |
+            <li>{{ reservation.room.name }} | {{ reservation.guest.first_name }} {{ reservation.guest.last_name }} |
             arr: {{ reservation.arrival|date:"D d M" }} | {{ reservation.price }} |
-                {{ reservation.get_status_display }}<br></li>
+                {{ reservation.get_status_display }} | <a href="{% url 'reservation_details_hotel' reservation.id %}">view</a>
+                <br></li>
             {% endfor %}
             </ul>
             <div class="pagination">
@@ -36,8 +38,9 @@
         <div>
             <h4>Recent reviews:</h4>
             {% for review in reviews %}
-                {{ review.title }} | {{ review.guest.first_name }} {{ review.guest.last_name }} | {{ review.created|date:"D d M" }}
-                | <a href="{% url 'review_details' review.id %}">view</a>
+                <p>{{ review.title }} | {{ review.guest.first_name }}
+                    {{ review.guest.last_name }} | {{ review.created|date:"D d M" }}
+                | <a href="{% url 'review_details' review.id %}">view</a></p>
             {% endfor %}
         </div>
         <hr>
@@ -46,19 +49,30 @@
         </div>
         <hr>
         <h4>My rooms:</h4>
-        <div class="col-5">
+        <div class="col-8">
 
             <ul>
             {% for room in hotel.hotel_rooms.all %}
-                <div class="img-thumbnail">
-                    <li> <a href="{% url 'details-room' hotel.id room.id %}">{{  room.name }}</a></li>
-                        <ul>
-                    {% for rateplan in room.room_rateplans.all %}
-                        <li>{{ rateplan.name }} - <a href="{% url 'update_rateplan' rateplan.id%}">edit</a> -
-                            <a href="{% url 'create_price' hotel.id%}">prices</a></li>
-                    {% endfor %}
-                    <li> <a href="{% url 'create_rateplan' hotel.id room.id%}">+ add rateplan</a> </li>
-                    </ul>
+                <div class="img-thumbnail m-2">
+                    <div class="row">
+                        <div class="col-3">
+                            <img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png"
+                                                 class="img-fluid float-end" alt="">
+                        </div>
+                        <div class="col-6">
+                            <h5>{{ room.name }}</h5>
+                                <ul>
+                            {% for rateplan in room.room_rateplans.all %}
+                                <li>{{ rateplan.name }} - <a href="{% url 'update_rateplan' rateplan.id%}">edit</a>
+                            {% endfor %}
+                            <li> <a href="{% url 'create_rateplan' hotel.id room.id%}">+ add rateplan</a> </li>
+                            </ul>
+                        </div>
+                        <div class="col-3">
+                            <p><a href="{% url 'details-room' hotel.id room.id %}" class="btn-sm btn-dark">edit room</a></p>
+                            <p><a href="{% url 'delete_room' room.id %}" class="btn-sm btn-danger">delete room</a></p>
+                        </div>
+                    </div>
                 </div>
             {% endfor %}
             <li><a href="{% url 'create_room' hotel.id %}">+ add new room</a></li>
