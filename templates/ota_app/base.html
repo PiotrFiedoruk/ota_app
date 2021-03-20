@@ -22,7 +22,7 @@
                     <li class="nav-item">
                         <a class="nav-link active text-warning" aria-current="page" href="{% url 'main' %}">Home</a></li>
                 </ul>
-			<div class="btn-group float-right">
+			<div class="btn-group ml-auto">
 			    {% if user.is_authenticated %}
                     {% if perms.ota_app.add_hotel %}
                     <a href="{% url 'my_hotels' %}" class="btn btn-outline-light">Manage my hotel</a>

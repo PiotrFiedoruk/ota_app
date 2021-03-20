@@ -6,24 +6,23 @@
     <hr>
     <div class="row">
         <form method = "get">
-            city: <input type="text" name="city">
-            arrival: <input type="date" name="arrival">
-            departure: <input type="date" name="departure">
-            guests: <input type="number" name="guests">
+            city: <input type="text" name="city" required>
+            arrival: <input type="date" name="arrival" required>
+            departure: <input type="date" name="departure" required>
+            guests: <input type="number" name="guests" required>
             <input type="submit" class="btn btn-warning"  value="search">
         </form>
     </div>
+    <hr>
     <div class="row">
         {% for hotel in hotelsearch %}
-            <div class="col-3 img-thumbnail">
+            <div class="col-3 img-thumbnail m-2">
                 <img src="http://placehold.jp/24/adb5bd/ffc107/300x200.png" width="100%">
                 <h5>{{ hotel.name }}</h5>
                 <h6>{{ hotel.city }}</h6>
-                <h7>Hotel headline</h7>
-                <a href="{% url 'hotel-details' hotel.id %}?city={{ city }}&arrival={{ arrival }}&departure={{ departure }}&guests={{ guests }}" class="btn btn-warning float-end">zobacz</a>
+                <a href="{% url 'hotel-details' hotel.id %}?city={{ city }}&arrival={{ arrival }}&departure={{ departure }}&guests={{ guests }}" class="btn btn-warning float-right">zobacz</a>
             </div>
         {% endfor %}
     </div>
-    <hr>
 </div>
 {% endblock %}

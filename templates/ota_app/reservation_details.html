@@ -14,11 +14,13 @@
             <p>main guest name: {{ reservation.guest.first_name }} {{ reservation.guest.last_name }}</p>
             <p>price: {{ reservation.price }}</p>
             <p>{{ reservation.rateplan.name }}</p>
+            {% if reservation.status == 'active' %}
             <form method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="resid" value="{{ reservation.id }}">
                 <input type="submit" class="btn btn-danger" value="cancel">
             </form>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

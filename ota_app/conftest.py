@@ -62,7 +62,7 @@ def hotel_owner(user):
 
 @pytest.fixture
 def hotel(hotel_owner):
-    h = Hotel.objects.create(name="Hilton", hotel_owner=hotel_owner)
+    h = Hotel.objects.create(name="Hilton", city='Warsaw', hotel_owner=hotel_owner)
     return h
 
 @pytest.fixture

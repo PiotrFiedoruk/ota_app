@@ -4,53 +4,61 @@
 
 {% block content %}
 <div class="container">
-<div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-12 ">
-<h2>  {{ room.name }}</h2>
-            <hr>
-            <div class="row">
-
-            <div class="col-6">
-
-                <p><img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png" class="img-fluid" alt=""></p>
-
-            </div>
-            <div class="col-6">
-                <p>opis</p>
-            </div>
-            </div>
-            <hr>
-
-            <div class="row">
-            <div class="col-6">
+<div class="col-lg-6-offset-3 col-md-8-offset-2 col-sm-8 offset-2">
+    <h2>  {{ room.name }}</h2>
+    <hr>
+    <div class="row">
+        <div class="col-6">
+            <p><img src="http://placehold.jp/24/adb5bd/ffc107/400x300.png" class="img-fluid" alt=""></p>
+        </div>
+        <div class="col-6 text-justify">
+            <p>{{ room.description }}</p>
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col-6">
             <div class="img-thumbnail bg-light">
-                Most popular amenities:
+                <h5>Most popular amenities:</h5>
+                <ul>
+                {% for amenity in room.amenities %}
+                    <li>{{ amenity }}</li>
+                {% endfor %}
+                </ul>
             </div>
+        </div>
+        <hr>
+        <div class="col-6">
+            <div>
+                <h5>Available rates:</h5>
+                <p>Arrival: {{ arrival }} - Departure: {{ departure}}</p>
             </div>
             <hr>
-            <div class="col-6">
-            <div>
-                Arrival: {{ arrival }} - Departure: {{ departure}}
-            </div>
-            <hr>
-            <div>
-            {% for rateplan in available_rateplans %}
+             <div>
+                {% for rateplan in available_rateplans %}
                 <div class="img-thumbnail">
-                    {{ rateplan.name }} - {{ rateplan.total_price }} PLN
-                    <form method="post" action="{% url 'confirm-reservation' %}">
-                    {% csrf_token %}
-                    <input type="hidden" value="{{ rateplan.id }}" name="rpid">
-                    <input type="hidden" value="{{ rateplan.total_price }}" name="total_price">
-                    <input type="hidden" value="{{ arrival }}" name="arrival">
-                    <input type="hidden" value="{{ departure }}" name="departure">
-                    <input type="hidden" value="{{ guests }}" name="guests">
-                    <input type="submit" class="btn btn-warning" value="Book this rate">
-                    </form>
+                    <div class="row">
+                        <div class="col-8">
+                            {{ rateplan.name }} - {{ rateplan.total_price }} PLN
+                        </div>
+                        <div class="col-4">
+                            <form method="post" action="{% url 'confirm-reservation' %}">
+                            {% csrf_token %}
+                            <input type="hidden" value="{{ rateplan.id }}" name="rpid">
+                            <input type="hidden" value="{{ rateplan.total_price }}" name="total_price">
+                            <input type="hidden" value="{{ arrival }}" name="arrival">
+                            <input type="hidden" value="{{ departure }}" name="departure">
+                            <input type="hidden" value="{{ guests }}" name="guests">
+                            <input type="submit" class="btn btn-warning" value="Book">
+                            </form>
+                        </div>
+                    </div>
                 </div>
                 <br>
-            {% endfor %}
-            </div>
-            </div>
-            </div>
+                {% endfor %}
+             </div>
+        </div>
+    </div>
     </div>
 </div>
 {% endblock %}
