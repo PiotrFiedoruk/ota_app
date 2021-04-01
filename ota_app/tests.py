@@ -74,10 +74,6 @@ def test_main_page_results_content(client):
     assert response_get_future_set.context['guests'] == '2'
 
 
-@pytest.mark.django_db
-def test_permission(user):
-    assert user.has_perm('ota_app.view_hotel') is True
-
 
 @pytest.mark.django_db
 def test_dashboard(client, hotel):

@@ -24,13 +24,13 @@ FACILITIES = (("Concierge", "Concierge"),
               ("Gym", "Gym"))
 
 AMENITIES = (("Disabled facilities", "Disabled facilities"),
-              ("Wifi", "Wifi"),
-              ("TV", "TV"),
-              ("Air Conditioning", "Air Conditioning"),
-              ("Shower", "Shower"),
-              ("Bath", "Bath"),
-              ("Tea/Coffee", "Tea/Coffee"),
-              ("No smoking", "No smoking"))
+             ("Wifi", "Wifi"),
+             ("TV", "TV"),
+             ("Air Conditioning", "Air Conditioning"),
+             ("Shower", "Shower"),
+             ("Bath", "Bath"),
+             ("Tea/Coffee", "Tea/Coffee"),
+             ("No smoking", "No smoking"))
 
 
 class Hotel(models.Model):
@@ -98,11 +98,3 @@ class Review(models.Model):
     score_cleaning = models.SmallIntegerField(validators=[MaxValueValidator(10), MinValueValidator(1)])
     score_service = models.SmallIntegerField(validators=[MaxValueValidator(10), MinValueValidator(1)])
     created = models.DateTimeField(auto_now_add=True)
-
-
-# class Message(models.Model):
-#     subject = models.CharField(max_length=256, verbose_name='Subject')
-#     content = models.TextField()
-#     message_to = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name='do:')
-#     message_from = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='od:')
-#     date_sent = models.DateTimeField(auto_now=True)

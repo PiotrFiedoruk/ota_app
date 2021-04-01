@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 from pathlib import Path
-
+from dbsettings import dbsettings
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -75,16 +75,7 @@ WSGI_APPLICATION = 'hotel_app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'ota_app',
-        'HOST': 'localhost',
-        'PASSWORD': 'coderslab',
-        'USER': 'postgres',
-        'PORT': 5432
-    }
-}
+DATABASES = dbsettings
 
 
 # Password validation
