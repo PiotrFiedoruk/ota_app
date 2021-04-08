@@ -113,3 +113,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+try:
+    from hotel_app.local_settings import DATABASES
+except ModuleNotFoundError:
+    print("Database not configured")
+    print("Please provide Database details")
+    exit(0)
